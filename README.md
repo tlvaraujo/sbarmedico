@@ -33,13 +33,16 @@ paciente continuam só no celular** — o Pages hospeda apenas o código.
 
 ## Gerador de SBAR por IA — deploy na Vercel
 
-O botão **"Importar prontuário"** chama uma função serverless (`api/sbar.ts`) que fala
-com o Claude usando a **chave da API guardada no servidor**. Isso precisa da Vercel —
-o GitHub Pages é estático e não roda funções.
+A aba **"Gerar"** (texto/áudio/foto/PDF → SBAR) e o botão **"Importar prontuário"**
+chamam funções serverless (`api/generate.ts`, `api/transcribe.ts`, `api/sbar.ts`) que
+falam com o Claude/Groq usando as **chaves guardadas no servidor**. Isso precisa da
+Vercel — o GitHub Pages é estático e não roda funções.
 
 1. Em [vercel.com](https://vercel.com) → **Add New → Project** → importe o repositório `sbarmedico`.
 2. Framework detectado: **Vite** (deixe o padrão; a pasta `api/` vira função automaticamente).
-3. **Environment Variables** → adicione `ANTHROPIC_API_KEY` = sua chave `sk-ant-…`.
+3. **Environment Variables** → adicione:
+   - `ANTHROPIC_API_KEY` = sua chave `sk-ant-…` (geração do SBAR).
+   - `GROQ_API_KEY` = sua chave `gsk_…` (transcrição de áudio da aba Gerar; grátis em console.groq.com).
    - Opcional: `SBAR_MODEL=claude-sonnet-5` para menor custo/latência (padrão: `claude-opus-4-8`).
 4. **Deploy**. A URL da Vercel passa a ser o app **com IA** — use essa no celular.
 

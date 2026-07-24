@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom'
-import { ClipboardList, Send, Settings } from 'lucide-react'
+import { ClipboardList, Send, Settings, Sparkles } from 'lucide-react'
 
 const tabs = [
   { to: '/', label: 'Plantão', icon: ClipboardList, end: true },
+  { to: '/gerar', label: 'Gerar', icon: Sparkles, end: false },
   { to: '/passagem', label: 'Passagem', icon: Send, end: false },
   { to: '/ajustes', label: 'Ajustes', icon: Settings, end: false },
 ]
