@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* iOS: evita o zoom automático ao focar campos */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+/* áreas seguras (notch / barra inferior) */
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Seções recolhíveis (details/summary) */
+summary {
+  list-style: none;
+  -webkit-tap-highlight-color: transparent;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+.section-chevron {
+  transition: transform 0.2s ease;
+}
+details[open] > summary .section-chevron {
+  transform: rotate(180deg);
+}
+
+/* Impressão: só o conteúdo da passagem */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  @page {
+    margin: 12mm;
+  }
+}

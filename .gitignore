@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-single
+dev-dist
+
+# Skills/estado herdados do Claude Code (não fazem parte do app)
+.claude/
+*.local
+.DS_Store
+.vscode/*
+!.vscode/extensions.json

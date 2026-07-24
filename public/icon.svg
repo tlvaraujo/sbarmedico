@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SBAR Médico">
+  <rect width="512" height="512" rx="112" fill="#0d9488" />
+  <rect x="140" y="132" width="232" height="268" rx="30" fill="#ffffff" />
+  <rect x="210" y="102" width="92" height="54" rx="18" fill="#ffffff" />
+  <rect x="210" y="102" width="92" height="54" rx="18" fill="#0d9488" opacity="0.18" />
+  <rect x="176" y="196" width="160" height="16" rx="8" fill="#0d9488" opacity="0.22" />
+  <path
+    d="M168 288 H214 L236 236 L268 340 L292 276 L312 288 H344"
+    fill="none"
+    stroke="#0d9488"
+    stroke-width="18"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <rect x="176" y="344" width="118" height="16" rx="8" fill="#0d9488" opacity="0.22" />
+</svg>
