@@ -1,10 +1,11 @@
 # SBAR Médico
 
 PWA _local-first_ para **passagem de plantão (SBAR)** de médicos de enfermaria.
-Mobile-first, offline e com os **dados 100% no aparelho** (IndexedDB) — sem nuvem,
-sem servidor e sem IA externa. A geração do SBAR é determinística (estrutura +
-montagem de texto); o app entrega **rascunhos para revisão** e não toma decisões
-clínicas.
+Mobile-first, offline e com os **dados 100% no aparelho** (IndexedDB). Monta o SBAR
+de forma determinística a partir de campos e também traz um **gerador por IA
+opcional**: cola-se o prontuário bruto e o Claude resume em SBAR — com anonimização
+no navegador e a chave da API guardada só no servidor. O app entrega **rascunhos
+para revisão** e não toma decisões clínicas.
 
 ## Rodar localmente
 
@@ -30,6 +31,22 @@ npm run build        # build de produção (PWA) → dist/
 O `base: './'` já deixa o app funcionando no subcaminho do Pages. Os **dados do
 paciente continuam só no celular** — o Pages hospeda apenas o código.
 
+## Gerador de SBAR por IA — deploy na Vercel
+
+O botão **"Importar prontuário"** chama uma função serverless (`api/sbar.ts`) que fala
+com o Claude usando a **chave da API guardada no servidor**. Isso precisa da Vercel —
+o GitHub Pages é estático e não roda funções.
+
+1. Em [vercel.com](https://vercel.com) → **Add New → Project** → importe o repositório `sbarmedico`.
+2. Framework detectado: **Vite** (deixe o padrão; a pasta `api/` vira função automaticamente).
+3. **Environment Variables** → adicione `ANTHROPIC_API_KEY` = sua chave `sk-ant-…`.
+   - Opcional: `SBAR_MODEL=claude-sonnet-5` para menor custo/latência (padrão: `claude-opus-4-8`).
+4. **Deploy**. A URL da Vercel passa a ser o app **com IA** — use essa no celular.
+
+**Privacidade:** os dados dos pacientes continuam no aparelho. Para o resumo por IA, o
+texto (anonimizado no cliente) passa pelo Claude; a API não treina com esses dados.
+Rodar `vercel dev` localmente também expõe `/api/sbar` para testes.
+
 ## Build single-file (offline puro, opcional)
 
 ```bash
@@ -51,4 +68,5 @@ opcional e desligado por padrão). Trava por PIN opcional (dissuasão).
 
 ## Stack
 
-Vite • React • TypeScript • Tailwind v4 • Dexie (IndexedDB) • vite-plugin-pwa
+Vite • React • TypeScript • Tailwind v4 • Dexie (IndexedDB) • vite-plugin-pwa •
+@anthropic-ai/sdk (função serverless na Vercel)

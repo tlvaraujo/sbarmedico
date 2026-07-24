@@ -12,6 +12,8 @@ import {
   Search,
   Trash2,
   TriangleAlert,
+  UserPlus,
+  Wand2,
 } from 'lucide-react'
 import {
   deletePatient,
@@ -168,9 +170,11 @@ function PatientRow({ p }: { p: Patient }) {
 
 function EmptyState({
   hasPatients,
+  onImport,
   onAdd,
 }: {
   hasPatients: boolean
+  onImport: () => void
   onAdd: () => void
 }) {
   return (
@@ -184,12 +188,17 @@ function EmptyState({
       <p className="mt-1 max-w-xs text-sm text-slate-500">
         {hasPatients
           ? 'Tente outro termo de busca.'
-          : 'Adicione o primeiro paciente do plantão. Leva poucos segundos.'}
+          : 'Cole um prontuário e deixe a IA montar o SBAR, ou adicione manualmente.'}
       </p>
       {!hasPatients && (
-        <Button className="mt-6" onClick={onAdd}>
-          <Plus className="h-4 w-4" /> Adicionar paciente
-        </Button>
+        <div className="mt-6 flex w-full max-w-xs flex-col gap-2">
+          <Button onClick={onImport}>
+            <Wand2 className="h-4 w-4" /> Gerar do prontuário (IA)
+          </Button>
+          <Button variant="secondary" onClick={onAdd}>
+            <Plus className="h-4 w-4" /> Adicionar manual
+          </Button>
+        </div>
       )}
     </div>
   )
@@ -222,6 +231,15 @@ export function ListScreen() {
             ? `${count} paciente${count === 1 ? '' : 's'} ativo${count === 1 ? '' : 's'}`
             : 'Carregando…'
         }
+        right={
+          <button
+            onClick={() => navigate('/novo')}
+            aria-label="Adicionar manual"
+            className="rounded-lg p-2 text-slate-600 hover:bg-slate-200"
+          >
+            <UserPlus className="h-5 w-5" />
+          </button>
+        }
       />
 
       <div className="border-b border-slate-200 bg-slate-100 px-3 py-2">
@@ -237,7 +255,11 @@ export function ListScreen() {
       </div>
 
       {filtered === undefined ? null : filtered.length === 0 ? (
-        <EmptyState hasPatients={count > 0} onAdd={() => navigate('/novo')} />
+        <EmptyState
+          hasPatients={count > 0}
+          onImport={() => navigate('/importar')}
+          onAdd={() => navigate('/novo')}
+        />
       ) : (
         <ul>
           {filtered.map((p) => (
@@ -249,11 +271,11 @@ export function ListScreen() {
       )}
 
       <button
-        onClick={() => navigate('/novo')}
-        aria-label="Adicionar paciente"
+        onClick={() => navigate('/importar')}
+        aria-label="Importar prontuário"
         className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-teal-600 text-white shadow-lg shadow-teal-600/30 transition hover:bg-teal-700 active:scale-95"
       >
-        <Plus className="h-7 w-7" />
+        <Wand2 className="h-7 w-7" />
       </button>
     </div>
   )

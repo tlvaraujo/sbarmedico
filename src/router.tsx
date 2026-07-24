@@ -5,6 +5,7 @@ import { PatientForm } from './screens/PatientForm'
 import { SbarPreview } from './screens/SbarPreview'
 import { HandoffScreen } from './screens/HandoffScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
+import { ImportScreen } from './screens/ImportScreen'
 
 export const router = createHashRouter([
   {
@@ -13,6 +14,7 @@ export const router = createHashRouter([
     children: [
       { index: true, element: <ListScreen /> },
       { path: 'novo', element: <PatientForm /> },
+      { path: 'importar', element: <ImportScreen /> },
       { path: 'paciente/:id', element: <PatientForm /> },
       { path: 'sbar/:id', element: <SbarPreview /> },
       { path: 'passagem', element: <HandoffScreen /> },
