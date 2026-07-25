@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
                 display: 'standalone',
                 orientation: 'portrait',
                 background_color: '#0f172a',
-                theme_color: '#0d9488',
+                theme_color: '#0f8168',
                 categories: ['medical', 'productivity'],
                 icons: [
                   { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },

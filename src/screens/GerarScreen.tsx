@@ -125,8 +125,8 @@ function PatientResultCard({ p }: { p: SbarPatient }) {
   return (
     <details
       open={crit}
-      className={`overflow-hidden rounded-2xl border bg-white ${
-        crit ? 'border-red-400' : 'border-slate-200'
+      className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${
+        crit ? 'border-red-300 shadow-red-900/5' : 'border-slate-900/5'
       }`}
     >
       <summary

@@ -66,13 +66,13 @@ function PatientRow({ p }: { p: Patient }) {
     )
 
   return (
-    <div className="relative flex items-stretch border-b border-slate-200 bg-white">
+    <div className="relative flex items-stretch">
       <button
         onClick={() => navigate(`/sbar/${p.id}`)}
-        className="flex flex-1 items-center gap-3 py-3 pl-3 text-left"
+        className="flex flex-1 items-center gap-3 py-3 pl-3 text-left transition active:bg-slate-50"
       >
         <span
-          className={`flex h-11 w-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${STABILITY_BADGE[p.stability]}`}
+          className={`flex h-11 w-12 shrink-0 items-center justify-center rounded-xl text-[15px] font-bold shadow-sm ring-1 ring-inset ring-black/5 ${STABILITY_BADGE[p.stability]}`}
         >
           {p.bed || '—'}
         </span>
@@ -242,9 +242,9 @@ export function ListScreen() {
         }
       />
 
-      <div className="border-b border-slate-200 bg-slate-100 px-3 py-2">
+      <div className="px-3 pb-1 pt-3">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -261,9 +261,13 @@ export function ListScreen() {
           onAdd={() => navigate('/novo')}
         />
       ) : (
-        <ul>
-          {filtered.map((p) => (
-            <li key={p.id}>
+        <ul className="mx-3 mt-2 divide-y divide-slate-100 rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5">
+          {filtered.map((p, i) => (
+            <li
+              key={p.id}
+              className="animate-enter"
+              style={{ animationDelay: `${Math.min(i * 40, 320)}ms` }}
+            >
               <PatientRow p={p} />
             </li>
           ))}
@@ -273,7 +277,7 @@ export function ListScreen() {
       <button
         onClick={() => navigate('/importar')}
         aria-label="Importar prontuário"
-        className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-teal-600 text-white shadow-lg shadow-teal-600/30 transition hover:bg-teal-700 active:scale-95"
+        className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-teal-600 text-white shadow-lg shadow-teal-950/25 ring-1 ring-white/10 transition-all hover:bg-teal-700 hover:shadow-xl active:scale-90"
       >
         <Wand2 className="h-7 w-7" />
       </button>
