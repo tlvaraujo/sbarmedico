@@ -1,75 +1,75 @@
 # SBAR Médico
 
-PWA _local-first_ para **passagem de plantão (SBAR)** de médicos de enfermaria.
-Mobile-first, offline e com os **dados 100% no aparelho** (IndexedDB). Monta o SBAR
-de forma determinística a partir de campos e também traz um **gerador por IA
-opcional**: cola-se o prontuário bruto e o Claude resume em SBAR — com anonimização
-no navegador e a chave da API guardada só no servidor. O app entrega **rascunhos
-para revisão** e não toma decisões clínicas.
+PWA _mobile-first_ para **passagem de plantão (SBAR)** de médicos de enfermaria.
+A médica envia o **prontuário bruto** (foto, galeria, arquivo ou texto colado) e o
+Claude devolve um **rascunho de SBAR editável** — nunca inventa, usa só o que está no
+prontuário, remove dados identificáveis e respeita os limites de cada seção. O
+documento final vira **PDF**, gerado e guardado **100% no aparelho** (IndexedDB).
+
+> O app entrega **rascunhos para revisão** — a médica confere e ajusta tudo antes de
+> usar. Não toma decisões clínicas.
+
+## Fluxo (3 telas)
+
+1. **Entrada** — Leito → Identificação (só iniciais, aviso de LGPD) → Proporcionalidade
+   terapêutica → Prontuário (câmera, galeria, arquivo `PDF/DOCX/TXT` ou colar texto,
+   vários de uma vez). Botão **Gerar SBAR**.
+2. **Revisar** — o rascunho S / B / A / R vem preenchido e **editável**, junto com
+   leito/identificação/proporcionalidade. Botão **Gerar documento** (salva na Biblioteca).
+3. **Biblioteca** (home) — lista dos SBARs (leito · iniciais · data/hora); **baixar PDF
+   individual** ou **todos em um PDF (lote)**; excluir; **+ Novo SBAR**.
 
 ## Rodar localmente
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev        # http://localhost:5173 (UI; a geração precisa da função /api)
+```
+
+Para exercitar a geração de SBAR localmente é preciso rodar a função serverless com a
+chave configurada:
+
+```bash
+npm i -g vercel
+vercel dev         # sobe o app + /api/generate lendo o .env
 ```
 
 ## Verificação
 
 ```bash
-npm run test         # testes do motor SBAR (Vitest)
+npm run test         # Vitest (pdf, intake, anonimização)
 npm run typecheck    # checagem de tipos (TS strict)
 npm run build        # build de produção (PWA) → dist/
 ```
 
-## Publicar no GitHub Pages
+## Deploy na Vercel
 
-1. Crie um repositório no GitHub e faça `push` na branch **main**.
-2. Em **Settings → Pages**, selecione **GitHub Actions** como origem.
-3. O workflow em `.github/workflows/deploy.yml` builda e publica a cada push.
-
-O `base: './'` já deixa o app funcionando no subcaminho do Pages. Os **dados do
-paciente continuam só no celular** — o Pages hospeda apenas o código.
-
-## Gerador de SBAR por IA — deploy na Vercel
-
-A aba **"Gerar"** (texto/áudio/foto/PDF → SBAR) e o botão **"Importar prontuário"**
-chamam funções serverless (`api/generate.ts`, `api/transcribe.ts`, `api/sbar.ts`) que
-falam com o Claude/Groq usando as **chaves guardadas no servidor**. Isso precisa da
-Vercel — o GitHub Pages é estático e não roda funções.
+A geração do SBAR usa uma função serverless (`api/generate.ts`) que fala com o Claude
+usando a **chave guardada no servidor** — por isso o app roda na **Vercel** (um host
+estático como o GitHub Pages não executa a função).
 
 1. Em [vercel.com](https://vercel.com) → **Add New → Project** → importe o repositório `sbarmedico`.
 2. Framework detectado: **Vite** (deixe o padrão; a pasta `api/` vira função automaticamente).
-3. **Environment Variables** → adicione:
-   - `ANTHROPIC_API_KEY` = sua chave `sk-ant-…` (geração do SBAR).
-   - `GROQ_API_KEY` = sua chave `gsk_…` (transcrição de áudio da aba Gerar; grátis em console.groq.com).
+3. **Environment Variables**:
+   - `ANTHROPIC_API_KEY` = sua chave `sk-ant-…` (obrigatória).
    - Opcional: `SBAR_MODEL=claude-sonnet-5` para menor custo/latência (padrão: `claude-opus-4-8`).
-4. **Deploy**. A URL da Vercel passa a ser o app **com IA** — use essa no celular.
+4. **Deploy**. Use a URL da Vercel no celular e **instale** o app (Adicionar à tela inicial).
 
-**Privacidade:** os dados dos pacientes continuam no aparelho. Para o resumo por IA, o
-texto (anonimizado no cliente) passa pelo Claude; a API não treina com esses dados.
-Rodar `vercel dev` localmente também expõe `/api/sbar` para testes.
-
-## Build single-file (offline puro, opcional)
-
-```bash
-npm run build:single   # → dist-single/index.html (um arquivo só)
-```
-
-Útil como cópia de resiliência: um único HTML que abre no celular sem internet.
-
-## Ícones
-
-Os PNGs em `public/` são gerados a partir de `public/icon.svg`. Em uma máquina com
-`sharp` funcional (ex.: CI Linux): `npm run generate-icons`.
+Cada `git push` na branch **main** dispara um novo deploy automático.
 
 ## Privacidade / LGPD
 
-Nenhum dado de paciente sai do dispositivo. Backup manual em **Ajustes →
-Exportar (JSON)**. Identificação padrão: **iniciais + leito** (nome completo é
-opcional e desligado por padrão). Trava por PIN opcional (dissuasão).
+- **Identificação por iniciais.** A tela de entrada avisa para nunca digitar nome
+  completo, CPF ou nº de prontuário. Textos colados/`.txt`/`.docx` ainda passam por uma
+  anonimização automática (CPF, telefone, e-mail, CEP, cartão SUS, nº de registro) antes
+  de irem para a IA; o modelo também é instruído a remover dados identificáveis.
+- **Fotos e PDFs não são anonimizados no cliente** — a IA usa apenas iniciais no
+  resultado, mas confira sempre o rascunho.
+- **Os documentos ficam só neste aparelho** (IndexedDB). Não há nuvem nem conta. Use o
+  **Download em lote** para guardar/transferir um backup em PDF.
+- A API da Anthropic **não treina** com os dados enviados.
 
 ## Stack
 
 Vite • React • TypeScript • Tailwind v4 • Dexie (IndexedDB) • vite-plugin-pwa •
-@anthropic-ai/sdk (função serverless na Vercel)
+jsPDF + mammoth (sob demanda) • @anthropic-ai/sdk (função serverless na Vercel)

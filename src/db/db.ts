@@ -1,9 +1,8 @@
 import Dexie, { type Table } from 'dexie'
-import type { Patient } from '../types/patient'
+import type { SbarDocument } from '../types/document'
 
-// Versão dos DADOS (vai carimbada nos backups JSON para migração na importação).
-// Independente do número de versão do schema do Dexie.
-export const APP_DATA_VERSION = 1
+// Versão dos dados (para migrações). v2 = redesenho total.
+export const APP_DATA_VERSION = 2
 
 export interface MetaRow {
   key: string
@@ -11,24 +10,19 @@ export interface MetaRow {
 }
 
 export class SbarDB extends Dexie {
-  patients!: Table<Patient, string>
+  documents!: Table<SbarDocument, string>
   meta!: Table<MetaRow, string>
 
   constructor() {
     super('sbar-medico')
-    // Só indexamos o que é usado em consulta. `archived`/`pinned` são
-    // booleanos (não indexáveis no IndexedDB) e são filtrados em memória —
-    // o conjunto de um plantão é pequeno (dezenas de registros).
-    this.version(1).stores({
-      patients: 'id, bed, updatedAt',
+    // v1 (legado): store `patients` — abandonado no redesenho.
+    this.version(1).stores({ patients: 'id, bed, updatedAt', meta: 'key' })
+    // v2: substituição total — remove `patients` (destrutivo) e adiciona `documents`.
+    this.version(2).stores({
+      patients: null,
+      documents: 'id, createdAt',
       meta: 'key',
     })
-
-    // --- Reserva Fase 2 (aditivo, não-destrutivo) ---
-    // this.version(2).stores({
-    //   patients: 'id, bed, updatedAt',
-    //   evolutions: 'id, patientId, date',
-    // })
   }
 }
 

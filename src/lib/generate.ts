@@ -1,14 +1,5 @@
-// Cliente da aba "Gerar": chama /api/generate (texto/imagem/PDF) e /api/transcribe (áudio).
-
-export interface SbarPatient {
-  leito: string
-  iniciais: string
-  situation: string
-  background: string
-  assessment: string
-  recommendation: string
-  alert: string
-}
+// Cliente da IA: chama /api/generate (texto/imagem/PDF → S/B/A/R).
+import type { Proporcionalidade } from '../types/document'
 
 export interface ImageInput {
   media_type: string
@@ -16,9 +7,19 @@ export interface ImageInput {
 }
 
 export interface GeneratePayload {
+  leito?: string
+  identificacao?: string
+  proporcionalidade?: Proporcionalidade
   text?: string
   images?: ImageInput[]
-  pdf?: { data: string }
+  pdfs?: { data: string }[]
+}
+
+export interface SbarResult {
+  s: string
+  b: string
+  a: string
+  r: string[]
 }
 
 async function postJson(url: string, body: unknown): Promise<unknown> {
@@ -54,30 +55,29 @@ function str(v: unknown): string {
   return typeof v === 'string' ? v : ''
 }
 
-function normalize(raw: Record<string, unknown>): SbarPatient {
+/** Aceita array (schema) ou string com quebras (defensivo); tira "• " e vazios. */
+function toBullets(v: unknown): string[] {
+  const arr = Array.isArray(v)
+    ? v
+    : typeof v === 'string'
+      ? v.split('\n')
+      : []
+  return arr
+    .map((x) => (typeof x === 'string' ? x.replace(/^[•\-*]\s*/, '').trim() : ''))
+    .filter(Boolean)
+}
+
+export async function generate(payload: GeneratePayload): Promise<SbarResult> {
+  const data = (await postJson('/api/generate', payload)) as Record<string, unknown>
   return {
-    leito: str(raw.leito),
-    iniciais: str(raw.iniciais),
-    situation: str(raw.situation),
-    background: str(raw.background),
-    assessment: str(raw.assessment),
-    recommendation: str(raw.recommendation),
-    alert: str(raw.alert),
+    s: str(data.s),
+    b: str(data.b),
+    a: str(data.a),
+    r: toBullets(data.r),
   }
 }
 
-export async function generate(payload: GeneratePayload): Promise<SbarPatient[]> {
-  const data = (await postJson('/api/generate', payload)) as { patients?: unknown }
-  const list = Array.isArray(data.patients) ? (data.patients as Record<string, unknown>[]) : []
-  return list.map(normalize)
-}
-
-export async function transcribe(audio: string, mime: string): Promise<string> {
-  const data = (await postJson('/api/transcribe', { audio, mime })) as { text?: unknown }
-  return str(data.text)
-}
-
-// --- Helpers de arquivo/áudio/imagem ---
+// --- Helpers de arquivo/imagem ---
 
 function readAsDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -104,15 +104,15 @@ export async function fileToImageInput(file: File): Promise<ImageInput> {
 /** Reduz a imagem (borda longa) e recomprime em JPEG para diminuir payload/tokens. */
 export async function downscaleImage(
   file: File,
-  maxEdge = 2000,
-  quality = 0.85,
+  maxEdge = 1600,
+  quality = 0.7,
 ): Promise<ImageInput> {
   if (!file.type.startsWith('image/')) return fileToImageInput(file)
   try {
     const bitmap = await createImageBitmap(file)
     const longest = Math.max(bitmap.width, bitmap.height)
     const scale = Math.min(1, maxEdge / longest)
-    if (scale >= 1 && file.size < 800_000) {
+    if (scale >= 1 && file.size < 600_000) {
       bitmap.close?.()
       return fileToImageInput(file)
     }

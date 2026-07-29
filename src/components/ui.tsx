@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronDown, ChevronLeft } from 'lucide-react'
 
 export const inputClass =
   'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-slate-900 shadow-sm placeholder:text-slate-400 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15'
@@ -91,5 +91,34 @@ export function BackButton() {
     >
       <ChevronLeft className="h-6 w-6" />
     </button>
+  )
+}
+
+export function Select<T extends string>({
+  value,
+  onChange,
+  options,
+  className = '',
+}: {
+  value: T
+  onChange: (v: T) => void
+  options: { value: T; label: string }[]
+  className?: string
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as T)}
+        className={`${inputClass} appearance-none pr-10 ${className}`}
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+    </div>
   )
 }
