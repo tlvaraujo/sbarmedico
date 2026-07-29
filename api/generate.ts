@@ -39,7 +39,7 @@ const SCHEMA: Record<string, unknown> = {
     s: { type: 'string' },
     b: { type: 'string' },
     a: { type: 'string' },
-    r: { type: 'array', items: { type: 'string' }, maxItems: 5 },
+    r: { type: 'array', items: { type: 'string' } },
   },
   required: ['s', 'b', 'a', 'r'],
 }
