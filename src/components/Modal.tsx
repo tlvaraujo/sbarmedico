@@ -35,18 +35,18 @@ export function Modal({
         className="animate-fade absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="animate-enter relative z-10 max-h-[85vh] w-full max-w-lg overflow-auto rounded-t-3xl bg-white p-5 shadow-xl sm:rounded-3xl">
+      <div className="animate-enter relative z-10 max-h-[85vh] w-full max-w-lg overflow-auto rounded-t-3xl bg-white p-5 shadow-xl sm:rounded-3xl dark:bg-slate-900 dark:ring-1 dark:ring-white/10">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">{title}</h2>
           <button
             onClick={onClose}
             aria-label="Fechar"
-            className="-mr-1 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100"
+            className="-mr-1 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="text-sm leading-relaxed text-slate-600">{children}</div>
+        <div className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{children}</div>
       </div>
     </div>
   )

@@ -32,16 +32,27 @@ SEÇÕES:
 
 O contexto fornecido pelo médico (leito, identificação, proporcionalidade terapêutica) serve só para orientar; NÃO o repita nas seções e NÃO o trate como dado do prontuário.`
 
-const SCHEMA: Record<string, unknown> = {
-  type: 'object',
-  additionalProperties: false,
-  properties: {
-    s: { type: 'string' },
-    b: { type: 'string' },
-    a: { type: 'string' },
-    r: { type: 'array', items: { type: 'string' } },
-  },
-  required: ['s', 'b', 'a', 'r'],
+type Section = 's' | 'b' | 'a' | 'r'
+const SECTIONS: Section[] = ['s', 'b', 'a', 'r']
+const SECTION_LABEL: Record<Section, string> = {
+  s: 'Situação',
+  b: 'Breve histórico',
+  a: 'Avaliação',
+  r: 'Recomendação',
+}
+const PROP_TYPES: Record<Section, Record<string, unknown>> = {
+  s: { type: 'string' },
+  b: { type: 'string' },
+  a: { type: 'string' },
+  r: { type: 'array', items: { type: 'string' } },
+}
+
+// Schema completo (S/B/A/R) ou de uma seção só, quando `only` é passado.
+function buildSchema(only?: Section): Record<string, unknown> {
+  const keys = only ? [only] : SECTIONS
+  const properties: Record<string, unknown> = {}
+  for (const k of keys) properties[k] = PROP_TYPES[k]
+  return { type: 'object', additionalProperties: false, properties, required: keys }
 }
 
 const OK_IMAGE = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
@@ -74,6 +85,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const pdfs = (Array.isArray(body.pdfs) ? body.pdfs : []).filter(
     (p): p is { data: string } => !!p && typeof (p as { data?: unknown }).data === 'string',
   )
+  const only = SECTIONS.find((k) => k === body.only)
+  const current = (body.current ?? {}) as Record<string, unknown>
 
   if (!text.trim() && images.length === 0 && pdfs.length === 0) {
     res.status(400).json({ error: 'Envie o prontuário (texto, foto, imagem ou PDF).' })
@@ -104,14 +117,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       source: { type: 'base64', media_type: 'application/pdf', data: pdf.data },
     })
   }
+  const rAtual = Array.isArray(current.r)
+    ? (current.r as unknown[]).map((x) => `• ${str(x)}`).join(' ')
+    : '—'
+  const contextoSecoes = only
+    ? `
+
+SEÇÕES JÁ PREENCHIDAS (refaça SOMENTE "${only.toUpperCase()}" — ${SECTION_LABEL[only]} — mantendo coerência com as demais, sem repetir):
+- S: ${str(current.s) || '—'}
+- B: ${str(current.b) || '—'}
+- A: ${str(current.a) || '—'}
+- R: ${rAtual}`
+    : ''
+
   const promptText = `CONTEXTO (fornecido pelo médico — não extrair do prontuário, não repetir nas seções):
 - Leito: ${leito || 'não informado'}
 - Identificação: ${identificacao || 'não informado'}
 - Proporcionalidade terapêutica: ${PROP_LABEL[prop] || PROP_LABEL.objetivo_nao_definido}
+${contextoSecoes}
 
 PRONTUÁRIO${text.trim() ? ' (texto)' : ''}:
 ${text.trim() || '(ver imagens/PDF anexados acima)'}`
   content.push({ type: 'text', text: promptText })
+
+  const system = only
+    ? `${SYSTEM}
+
+NESTA REQUISIÇÃO: refaça SOMENTE a seção "${only.toUpperCase()}" (${SECTION_LABEL[only]}) e devolva apenas essa seção no JSON. Respeite o mesmo limite de tamanho da seção.`
+    : SYSTEM
 
   const client = new Anthropic()
   try {
@@ -121,9 +154,9 @@ ${text.trim() || '(ver imagens/PDF anexados acima)'}`
       thinking: { type: 'adaptive' },
       output_config: {
         effort: 'low',
-        format: { type: 'json_schema', schema: SCHEMA },
+        format: { type: 'json_schema', schema: buildSchema(only) },
       },
-      system: SYSTEM,
+      system,
       messages: [{ role: 'user', content }],
     })
 

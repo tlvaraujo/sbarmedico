@@ -6,6 +6,8 @@ export interface ImageInput {
   data: string // base64 sem o prefixo data:
 }
 
+export type Section = 's' | 'b' | 'a' | 'r'
+
 export interface GeneratePayload {
   leito?: string
   identificacao?: string
@@ -13,6 +15,8 @@ export interface GeneratePayload {
   text?: string
   images?: ImageInput[]
   pdfs?: { data: string }[]
+  only?: Section
+  current?: { s?: string; b?: string; a?: string; r?: string[] }
 }
 
 export interface SbarResult {
@@ -75,6 +79,18 @@ export async function generate(payload: GeneratePayload): Promise<SbarResult> {
     a: str(data.a),
     r: toBullets(data.r),
   }
+}
+
+/** Regenera SOMENTE uma seção. Retorna string (s/b/a) ou string[] (r). */
+export async function generateSection(
+  section: Section,
+  payload: GeneratePayload,
+): Promise<string | string[]> {
+  const data = (await postJson('/api/generate', { ...payload, only: section })) as Record<
+    string,
+    unknown
+  >
+  return section === 'r' ? toBullets(data.r) : str(data[section])
 }
 
 // --- Helpers de arquivo/imagem ---

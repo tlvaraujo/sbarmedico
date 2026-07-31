@@ -134,11 +134,45 @@ async function newPdf(): Promise<JsPdfDoc> {
   return new jsPDF({ unit: 'mm', format: 'a4' })
 }
 
-export async function downloadSingle(d: SbarDocument): Promise<void> {
+async function renderSingle(d: SbarDocument): Promise<JsPdfDoc> {
   const pdf = await newPdf()
   drawDocument(pdf, d)
   drawFooters(pdf)
+  return pdf
+}
+
+export async function downloadSingle(d: SbarDocument): Promise<void> {
+  const pdf = await renderSingle(d)
   pdf.save(pdfFilename(d))
+}
+
+/**
+ * Compartilha o PDF pela folha nativa do sistema (WhatsApp, e-mail, etc.).
+ * Sem suporte a compartilhar arquivo (ex.: desktop) → baixa o PDF.
+ */
+export async function sharePdf(d: SbarDocument): Promise<'shared' | 'downloaded'> {
+  const pdf = await renderSingle(d)
+  const name = pdfFilename(d)
+  const file = new File([pdf.output('blob')], name, { type: 'application/pdf' })
+
+  if (typeof navigator !== 'undefined' && typeof navigator.canShare === 'function') {
+    try {
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'SBAR Médico',
+          text: `SBAR — Leito ${d.leito || '—'}`,
+        })
+        return 'shared'
+      }
+    } catch (e) {
+      // Usuário cancelou a folha de compartilhamento → não faz fallback.
+      if (e instanceof DOMException && e.name === 'AbortError') return 'shared'
+    }
+  }
+
+  pdf.save(name)
+  return 'downloaded'
 }
 
 export async function downloadBatch(docs: SbarDocument[]): Promise<void> {

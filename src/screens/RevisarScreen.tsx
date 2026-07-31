@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { FileText } from 'lucide-react'
 import type { Proporcionalidade } from '../types/document'
-import { PROPORCIONALIDADE_OPTIONS } from '../types/document'
-import type { SbarResult } from '../lib/generate'
+import type { SbarResult, Section } from '../lib/generate'
+import { generateSection } from '../lib/generate'
+import { getStashedIntake, setStashedIntake } from '../lib/intakeStash'
 import { createDocument, putDocument } from '../db/documents'
-import { BackButton, Button, Field, PageHeader, Select, inputClass } from '../components/ui'
+import { BackButton, PageHeader } from '../components/ui'
+import { SbarForm, type SbarValues } from '../components/SbarForm'
 import { useToast } from '../components/Toast'
 
 interface RevisarState {
@@ -13,133 +14,62 @@ interface RevisarState {
   draft: SbarResult
 }
 
-const areaClass = `${inputClass} resize-y text-sm leading-snug`
-
 export function RevisarScreen() {
   const navigate = useNavigate()
   const toast = useToast()
-  const state = (useLocation().state ?? null) as RevisarState | null
+  const location = useLocation()
+  // Captura o prontuário (só memória) uma vez, para o "regerar seção".
+  const [intake] = useState(() => getStashedIntake())
+  const state = (location.state ?? null) as RevisarState | null
 
-  // Hooks rodam sempre; inicializam com o rascunho (ou vazio quando não há state).
-  const [leito, setLeito] = useState(state?.seed.leito ?? '')
-  const [identificacao, setIdentificacao] = useState(state?.seed.identificacao ?? '')
-  const [prop, setProp] = useState<Proporcionalidade>(
-    state?.seed.proporcionalidade ?? 'objetivo_nao_definido',
-  )
-  const [s, setS] = useState(state?.draft.s ?? '')
-  const [b, setB] = useState(state?.draft.b ?? '')
-  const [a, setA] = useState(state?.draft.a ?? '')
-  const [r, setR] = useState((state?.draft.r ?? []).join('\n'))
-  const [saving, setSaving] = useState(false)
-
-  // Sem rascunho na navegação (ex.: recarregou a página) → volta para a entrada.
+  // Sem rascunho (ex.: recarregou a página) → volta para a entrada.
   if (!state) return <Navigate to="/novo" replace />
 
-  const rItems = r
-    .split('\n')
-    .map((x) => x.replace(/^[•\-*]\s*/, '').trim())
-    .filter(Boolean)
-  const rOver = rItems.length > 5
-
-  async function onSave() {
-    setSaving(true)
-    try {
-      const doc = createDocument({
-        leito: leito.trim(),
-        identificacao: identificacao.trim(),
-        proporcionalidade: prop,
-        s: s.trim(),
-        b: b.trim(),
-        a: a.trim(),
-        r: rItems.slice(0, 5),
-      })
-      await putDocument(doc)
-      toast.show('Documento salvo na Biblioteca')
-      navigate('/')
-    } catch {
-      toast.show('Não foi possível salvar o documento', 'error')
-      setSaving(false)
-    }
+  const initial: SbarValues = {
+    leito: state.seed.leito,
+    identificacao: state.seed.identificacao,
+    proporcionalidade: state.seed.proporcionalidade,
+    s: state.draft.s,
+    b: state.draft.b,
+    a: state.draft.a,
+    r: state.draft.r,
   }
+
+  async function handleSubmit(v: SbarValues) {
+    await putDocument(createDocument({ ...v }))
+    setStashedIntake(null) // limpa o prontuário da memória após salvar
+    toast.show('Documento salvo na Biblioteca')
+    navigate('/')
+  }
+
+  const onRegenerate = intake
+    ? async (section: Section, current: SbarValues) =>
+        generateSection(section, {
+          leito: current.leito,
+          identificacao: current.identificacao,
+          proporcionalidade: current.proporcionalidade,
+          text: intake.text,
+          images: intake.images,
+          pdfs: intake.pdfs,
+          current: { s: current.s, b: current.b, a: current.a, r: current.r },
+        })
+    : undefined
 
   return (
     <div>
       <PageHeader title="Revisar SBAR" left={<BackButton />} />
-
-      <div className="space-y-4 p-3">
-        <p className="rounded-xl bg-teal-50 p-3 text-xs text-teal-800">
-          Rascunho gerado por IA a partir do prontuário. Revise e ajuste tudo antes de
-          gerar o documento.
+      <div className="px-3 pt-3">
+        <p className="rounded-xl bg-teal-50 p-3 text-xs text-teal-800 dark:bg-teal-500/10 dark:text-teal-200">
+          Rascunho gerado por IA a partir do prontuário. Revise e ajuste antes de gerar o
+          documento.{intake ? ' Toque em “Regerar” para refazer só uma seção.' : ''}
         </p>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Leito">
-            <input
-              value={leito}
-              onChange={(e) => setLeito(e.target.value)}
-              maxLength={15}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Proporcionalidade">
-            <Select value={prop} onChange={setProp} options={PROPORCIONALIDADE_OPTIONS} />
-          </Field>
-        </div>
-
-        <Field label="Identificação do paciente">
-          <input
-            value={identificacao}
-            onChange={(e) => setIdentificacao(e.target.value)}
-            maxLength={100}
-            className={inputClass}
-          />
-        </Field>
-
-        <Field label="S — Situação" hint="Uma linha.">
-          <textarea
-            value={s}
-            onChange={(e) => setS(e.target.value)}
-            rows={2}
-            className={areaClass}
-          />
-        </Field>
-
-        <Field label="B — Breve histórico" hint="Até 5 linhas.">
-          <textarea
-            value={b}
-            onChange={(e) => setB(e.target.value)}
-            rows={5}
-            className={areaClass}
-          />
-        </Field>
-
-        <Field label="A — Avaliação" hint="Até 5 linhas.">
-          <textarea
-            value={a}
-            onChange={(e) => setA(e.target.value)}
-            rows={5}
-            className={areaClass}
-          />
-        </Field>
-
-        <Field label="R — Recomendação" hint="Um tópico por linha (até 5).">
-          <textarea
-            value={r}
-            onChange={(e) => setR(e.target.value)}
-            rows={5}
-            className={areaClass}
-          />
-          <span
-            className={`mt-1 block text-right text-xs ${rOver ? 'font-semibold text-red-600' : 'text-slate-400'}`}
-          >
-            {rItems.length}/5 tópicos{rOver ? ' — os excedentes serão cortados' : ''}
-          </span>
-        </Field>
-
-        <Button onClick={onSave} disabled={saving} className="w-full">
-          <FileText className="h-4 w-4" /> {saving ? 'Salvando…' : 'Gerar documento'}
-        </Button>
       </div>
+      <SbarForm
+        initial={initial}
+        submitLabel="Gerar documento"
+        onSubmit={handleSubmit}
+        onRegenerate={onRegenerate}
+      />
     </div>
   )
 }

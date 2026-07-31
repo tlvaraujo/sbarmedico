@@ -1,28 +1,73 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Download, Files, Loader2, Plus, Trash2 } from 'lucide-react'
+import { Download, Files, Loader2, Pencil, Plus, Share2, Trash2 } from 'lucide-react'
 import { deleteDocument, useAllDocuments } from '../db/documents'
-import { downloadBatch, downloadSingle } from '../lib/pdf'
+import { downloadBatch, downloadSingle, sharePdf } from '../lib/pdf'
 import type { SbarDocument } from '../types/document'
 import { formatDateTime } from '../lib/format'
-import { Button, PageHeader } from '../components/ui'
+import { Button, PageHeader, ThemeToggle } from '../components/ui'
 import { useToast } from '../components/Toast'
+
+function RowAction({
+  icon: Icon,
+  label,
+  onClick,
+  busy,
+  tone = 'default',
+}: {
+  icon: typeof Download
+  label: string
+  onClick: () => void
+  busy?: boolean
+  tone?: 'default' | 'teal' | 'danger'
+}) {
+  const tones = {
+    default:
+      'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700',
+    teal: 'text-teal-700 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-500/10',
+    danger:
+      'text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400',
+  }
+  return (
+    <button
+      onClick={onClick}
+      disabled={busy}
+      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition disabled:opacity-50 ${tones[tone]}`}
+    >
+      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
+      {label}
+    </button>
+  )
+}
 
 export function BibliotecaScreen() {
   const navigate = useNavigate()
   const toast = useToast()
   const docs = useAllDocuments()
   const [busy, setBusy] = useState(false)
-  const [pendingId, setPendingId] = useState<string | null>(null)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [sharingId, setSharingId] = useState<string | null>(null)
 
-  async function single(d: SbarDocument) {
-    setPendingId(d.id)
+  async function download(d: SbarDocument) {
+    setDownloadingId(d.id)
     try {
       await downloadSingle(d)
     } catch {
       toast.show('Falha ao gerar o PDF', 'error')
     } finally {
-      setPendingId(null)
+      setDownloadingId(null)
+    }
+  }
+
+  async function share(d: SbarDocument) {
+    setSharingId(d.id)
+    try {
+      const r = await sharePdf(d)
+      if (r === 'downloaded') toast.show('Compartilhamento indisponível — PDF baixado')
+    } catch {
+      toast.show('Falha ao compartilhar', 'error')
+    } finally {
+      setSharingId(null)
     }
   }
 
@@ -51,15 +96,16 @@ export function BibliotecaScreen() {
       <PageHeader
         title="Biblioteca"
         subtitle={count > 0 ? `${count} SBAR${count > 1 ? 's' : ''}` : 'Seus SBARs gerados'}
+        right={<ThemeToggle />}
       />
 
       {docs === undefined ? null : docs.length === 0 ? (
         <div className="flex flex-col items-center justify-center px-6 py-24 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-600">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-300">
             <Files className="h-8 w-8" />
           </div>
-          <h2 className="text-lg font-bold text-slate-800">Nenhum SBAR ainda</h2>
-          <p className="mt-1 max-w-xs text-sm text-slate-500">
+          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Nenhum SBAR ainda</h2>
+          <p className="mt-1 max-w-xs text-sm text-slate-500 dark:text-slate-400">
             Gere seu primeiro SBAR a partir do prontuário do paciente.
           </p>
           <Button className="mt-6" onClick={() => navigate('/novo')}>
@@ -73,48 +119,47 @@ export function BibliotecaScreen() {
             Baixar todos em um PDF
           </Button>
 
-          <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5">
+          <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5 dark:divide-slate-800 dark:bg-slate-900 dark:ring-white/10">
             {docs.map((d, i) => (
               <li
                 key={d.id}
-                className="animate-enter flex items-center gap-2 p-3"
+                className="animate-enter p-3"
                 style={{ animationDelay: `${Math.min(i * 40, 320)}ms` }}
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="shrink-0 rounded-lg bg-teal-50 px-2 py-0.5 text-sm font-bold text-teal-700">
-                      {d.leito || '—'}
-                    </span>
-                    <span className="truncate font-semibold text-slate-800">
-                      {d.identificacao || 'Sem identificação'}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-xs text-slate-400">{formatDateTime(d.createdAt)}</p>
+                <div className="flex items-center gap-2">
+                  <span className="shrink-0 rounded-lg bg-teal-50 px-2 py-0.5 text-sm font-bold text-teal-700 dark:bg-teal-500/15 dark:text-teal-300">
+                    {d.leito || '—'}
+                  </span>
+                  <span className="truncate font-semibold text-slate-800 dark:text-slate-100">
+                    {d.identificacao || 'Sem identificação'}
+                  </span>
                 </div>
-                <button
-                  onClick={() => single(d)}
-                  disabled={pendingId === d.id}
-                  aria-label="Baixar PDF"
-                  className="rounded-lg p-2 text-teal-700 transition hover:bg-teal-50 disabled:opacity-50"
-                >
-                  {pendingId === d.id ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Download className="h-5 w-5" />
-                  )}
-                </button>
-                <button
-                  onClick={() => remove(d)}
-                  aria-label="Excluir"
-                  className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="h-5 w-5" />
-                </button>
+                <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                  {formatDateTime(d.createdAt)}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-1">
+                  <RowAction
+                    icon={Share2}
+                    label="Compartilhar"
+                    tone="teal"
+                    busy={sharingId === d.id}
+                    onClick={() => share(d)}
+                  />
+                  <RowAction
+                    icon={Download}
+                    label="Baixar"
+                    busy={downloadingId === d.id}
+                    onClick={() => download(d)}
+                  />
+                  <RowAction icon={Pencil} label="Editar" onClick={() => navigate(`/editar/${d.id}`)} />
+                  <div className="flex-1" />
+                  <RowAction icon={Trash2} label="Excluir" tone="danger" onClick={() => remove(d)} />
+                </div>
               </li>
             ))}
           </ul>
 
-          <p className="px-1 text-center text-xs text-slate-400">
+          <p className="px-1 text-center text-xs text-slate-400 dark:text-slate-500">
             Os documentos ficam só neste aparelho. Baixe (individual ou em lote) para
             guardar ou compartilhar.
           </p>

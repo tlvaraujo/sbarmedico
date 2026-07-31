@@ -15,6 +15,7 @@ import type { Proporcionalidade } from '../types/document'
 import { PROPORCIONALIDADE_OPTIONS } from '../types/document'
 import { buildIntake } from '../lib/intake'
 import { generate } from '../lib/generate'
+import { setStashedIntake } from '../lib/intakeStash'
 import { newId } from '../lib/id'
 import { BackButton, Button, Field, PageHeader, Select, inputClass } from '../components/ui'
 import { Modal } from '../components/Modal'
@@ -41,7 +42,7 @@ function UploadButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-1 rounded-xl border border-slate-200 bg-white py-3 text-xs font-medium text-slate-600 shadow-sm transition hover:border-teal-300 hover:text-teal-700"
+      className="flex flex-col items-center gap-1 rounded-xl border border-slate-200 bg-white py-3 text-xs font-medium text-slate-600 shadow-sm transition hover:border-teal-300 hover:text-teal-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-teal-500/50 dark:hover:text-teal-300"
     >
       <Icon className="h-5 w-5" />
       {label}
@@ -119,6 +120,8 @@ export function EntradaScreen() {
         setLoading(false)
         return
       }
+      // Guarda o prontuário só em memória para permitir "regerar seção" na revisão.
+      setStashedIntake({ text: intake.text, images: intake.images, pdfs: intake.pdfs })
       const draft = await generate({
         leito: leito.trim(),
         identificacao: identificacao.trim(),
@@ -148,7 +151,7 @@ export function EntradaScreen() {
           <button
             onClick={() => setInstrucoes(true)}
             aria-label="Instruções"
-            className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-900/5"
+            className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-900/5 dark:text-slate-300 dark:hover:bg-white/5"
           >
             <HelpCircle className="h-5 w-5" />
           </button>
@@ -179,7 +182,7 @@ export function EntradaScreen() {
             placeholder="R.R.R — 32a — 50 dias internado"
             className={inputClass}
           />
-          <div className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">
+          <div className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
             <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <span>
               Em conformidade com a LGPD, utilize apenas as iniciais. Não insira nome
@@ -204,11 +207,11 @@ export function EntradaScreen() {
               {attachments.map((att) =>
                 att.url ? (
                   <div key={att.id} className="relative">
-                    <img src={att.url} alt="" className="h-16 w-16 rounded-lg border border-slate-200 object-cover" />
+                    <img src={att.url} alt="" className="h-16 w-16 rounded-lg border border-slate-200 object-cover dark:border-slate-700" />
                     <button
                       onClick={() => removeAttach(att.id)}
                       aria-label="Remover"
-                      className="absolute -right-1.5 -top-1.5 rounded-full bg-slate-900 p-0.5 text-white"
+                      className="absolute -right-1.5 -top-1.5 rounded-full bg-slate-900 p-0.5 text-white dark:bg-slate-100 dark:text-slate-900"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -216,11 +219,11 @@ export function EntradaScreen() {
                 ) : (
                   <div
                     key={att.id}
-                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800"
                   >
-                    <FileText className="h-4 w-4 shrink-0 text-teal-600" />
+                    <FileText className="h-4 w-4 shrink-0 text-teal-600 dark:text-teal-400" />
                     <span className="max-w-[8rem] truncate">{att.file.name}</span>
-                    <button onClick={() => removeAttach(att.id)} aria-label="Remover" className="text-slate-400 hover:text-red-600">
+                    <button onClick={() => removeAttach(att.id)} aria-label="Remover" className="text-slate-400 hover:text-red-600 dark:text-slate-500">
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -235,13 +238,17 @@ export function EntradaScreen() {
             placeholder="…ou cole aqui o texto do prontuário"
             className={`${textareaClass} mt-2`}
           />
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
             Imagens/PDF não são anonimizados automaticamente — o resultado usa iniciais.
             Confira sempre.
           </p>
         </Field>
 
-        {error && <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+        {error && (
+          <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
+            {error}
+          </div>
+        )}
 
         <Button onClick={onGenerate} disabled={!canGenerate || loading} className="w-full">
           {loading ? (
@@ -255,29 +262,31 @@ export function EntradaScreen() {
           )}
         </Button>
         {loading && (
-          <p className="text-center text-xs text-slate-400">Pode levar alguns segundos.</p>
+          <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+            Pode levar alguns segundos.
+          </p>
         )}
       </div>
 
       <Modal open={instrucoes} onClose={() => setInstrucoes(false)} title="Como preencher">
         <div className="space-y-3">
           <div>
-            <strong className="text-slate-800">Leito</strong> — no formato do seu hospital.
-            Ex.: <code className="rounded bg-slate-100 px-1">7B14</code>.
+            <strong className="text-slate-800 dark:text-slate-100">Leito</strong> — no formato do seu
+            hospital. Ex.: <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">7B14</code>.
           </div>
           <div>
-            <strong className="text-slate-800">Identificação</strong> — iniciais, idade e
-            tempo de internação. Ex.: <em>R.R.R — 32a — 50 dias</em> (para “Renata Rocha
+            <strong className="text-slate-800 dark:text-slate-100">Identificação</strong> — iniciais,
+            idade e tempo de internação. Ex.: <em>R.R.R — 32a — 50 dias</em> (para “Renata Rocha
             Ramalho, 32 anos”). <strong>Nunca</strong> use nome completo, CPF ou nº de
             prontuário (LGPD).
           </div>
           <div>
-            <strong className="text-slate-800">Proporcionalidade terapêutica</strong> —
+            <strong className="text-slate-800 dark:text-slate-100">Proporcionalidade terapêutica</strong> —
             Suporte invasivo · Suporte não invasivo individualizado · Objetivo não definido.
           </div>
           <div>
-            <strong className="text-slate-800">Prontuário</strong> — envie o prontuário
-            completo por <em>foto</em>, <em>galeria</em>, <em>arquivo</em> (PDF/DOCX/TXT) ou
+            <strong className="text-slate-800 dark:text-slate-100">Prontuário</strong> — envie o
+            prontuário completo por <em>foto</em>, <em>galeria</em>, <em>arquivo</em> (PDF/DOCX/TXT) ou
             <em> colando o texto</em>. Pode enviar várias páginas de uma vez. A IA usa só o
             que está no prontuário — nunca inventa; o que faltar vira “não informado no
             prontuário”.
