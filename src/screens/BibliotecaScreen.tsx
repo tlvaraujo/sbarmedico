@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Download, Files, Loader2, Pencil, Plus, Share2, Trash2 } from 'lucide-react'
+import { Copy, Download, Files, Loader2, Pencil, Plus, Search, Share2, Trash2 } from 'lucide-react'
 import { deleteDocument, useAllDocuments } from '../db/documents'
 import { downloadBatch, downloadSingle, sharePdf } from '../lib/pdf'
+import { copyToClipboard, sbarToText } from '../lib/sbarText'
 import type { SbarDocument } from '../types/document'
 import { formatDateTime } from '../lib/format'
-import { Button, PageHeader, ThemeToggle } from '../components/ui'
+import { Button, PageHeader, ThemeToggle, inputClass } from '../components/ui'
 import { useToast } from '../components/Toast'
+
+type SortMode = 'recent' | 'leito'
 
 function RowAction({
   icon: Icon,
@@ -22,8 +25,7 @@ function RowAction({
   tone?: 'default' | 'teal' | 'danger'
 }) {
   const tones = {
-    default:
-      'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700',
+    default: 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700',
     teal: 'text-teal-700 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-500/10',
     danger:
       'text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400',
@@ -47,6 +49,25 @@ export function BibliotecaScreen() {
   const [busy, setBusy] = useState(false)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [sharingId, setSharingId] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const [sort, setSort] = useState<SortMode>('recent')
+
+  const visible = useMemo(() => {
+    let list = docs ?? []
+    const q = query.trim().toLowerCase()
+    if (q) list = list.filter((d) => `${d.leito} ${d.identificacao}`.toLowerCase().includes(q))
+    if (sort === 'leito') {
+      list = [...list].sort((a, b) =>
+        a.leito.localeCompare(b.leito, 'pt-BR', { numeric: true, sensitivity: 'base' }),
+      )
+    }
+    return list
+  }, [docs, query, sort])
+
+  async function copy(d: SbarDocument) {
+    const ok = await copyToClipboard(sbarToText(d))
+    toast.show(ok ? 'SBAR copiado' : 'Não foi possível copiar', ok ? 'ok' : 'error')
+  }
 
   async function download(d: SbarDocument) {
     setDownloadingId(d.id)
@@ -90,6 +111,11 @@ export function BibliotecaScreen() {
   }
 
   const count = docs?.length ?? 0
+  const showControls = count > 3
+  const seg = (active: boolean) =>
+    `rounded-md px-2.5 py-1 text-xs font-medium transition ${
+      active ? 'bg-teal-600 text-white' : 'text-slate-600 dark:text-slate-300'
+    }`
 
   return (
     <div>
@@ -114,50 +140,79 @@ export function BibliotecaScreen() {
         </div>
       ) : (
         <div className="space-y-3 p-3">
+          {showControls && (
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Buscar por leito ou identificação"
+                  className={`${inputClass} pl-9`}
+                />
+              </div>
+              <div className="flex shrink-0 rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
+                <button onClick={() => setSort('recent')} className={seg(sort === 'recent')}>
+                  Recentes
+                </button>
+                <button onClick={() => setSort('leito')} className={seg(sort === 'leito')}>
+                  Leito
+                </button>
+              </div>
+            </div>
+          )}
+
           <Button variant="secondary" className="w-full" onClick={batch} disabled={busy}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Files className="h-4 w-4" />}
             Baixar todos em um PDF
           </Button>
 
-          <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5 dark:divide-slate-800 dark:bg-slate-900 dark:ring-white/10">
-            {docs.map((d, i) => (
-              <li
-                key={d.id}
-                className="animate-enter p-3"
-                style={{ animationDelay: `${Math.min(i * 40, 320)}ms` }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="shrink-0 rounded-lg bg-teal-50 px-2 py-0.5 text-sm font-bold text-teal-700 dark:bg-teal-500/15 dark:text-teal-300">
-                    {d.leito || '—'}
-                  </span>
-                  <span className="truncate font-semibold text-slate-800 dark:text-slate-100">
-                    {d.identificacao || 'Sem identificação'}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-                  {formatDateTime(d.createdAt)}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-1">
-                  <RowAction
-                    icon={Share2}
-                    label="Compartilhar"
-                    tone="teal"
-                    busy={sharingId === d.id}
-                    onClick={() => share(d)}
-                  />
-                  <RowAction
-                    icon={Download}
-                    label="Baixar"
-                    busy={downloadingId === d.id}
-                    onClick={() => download(d)}
-                  />
-                  <RowAction icon={Pencil} label="Editar" onClick={() => navigate(`/editar/${d.id}`)} />
-                  <div className="flex-1" />
-                  <RowAction icon={Trash2} label="Excluir" tone="danger" onClick={() => remove(d)} />
-                </div>
-              </li>
-            ))}
-          </ul>
+          {visible.length === 0 ? (
+            <p className="py-10 text-center text-sm text-slate-400 dark:text-slate-500">
+              Nenhum SBAR encontrado para “{query}”.
+            </p>
+          ) : (
+            <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5 dark:divide-slate-800 dark:bg-slate-900 dark:ring-white/10">
+              {visible.map((d, i) => (
+                <li
+                  key={d.id}
+                  className="animate-enter p-3"
+                  style={{ animationDelay: `${Math.min(i * 40, 320)}ms` }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="shrink-0 rounded-lg bg-teal-50 px-2 py-0.5 text-sm font-bold text-teal-700 dark:bg-teal-500/15 dark:text-teal-300">
+                      {d.leito || '—'}
+                    </span>
+                    <span className="truncate font-semibold text-slate-800 dark:text-slate-100">
+                      {d.identificacao || 'Sem identificação'}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                    {formatDateTime(d.createdAt)}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-1">
+                    <RowAction icon={Copy} label="Copiar" tone="teal" onClick={() => copy(d)} />
+                    <RowAction
+                      icon={Share2}
+                      label="Compartilhar"
+                      tone="teal"
+                      busy={sharingId === d.id}
+                      onClick={() => share(d)}
+                    />
+                    <RowAction
+                      icon={Download}
+                      label="Baixar"
+                      busy={downloadingId === d.id}
+                      onClick={() => download(d)}
+                    />
+                    <RowAction icon={Pencil} label="Editar" onClick={() => navigate(`/editar/${d.id}`)} />
+                    <div className="flex-1" />
+                    <RowAction icon={Trash2} label="Excluir" tone="danger" onClick={() => remove(d)} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
 
           <p className="px-1 text-center text-xs text-slate-400 dark:text-slate-500">
             Os documentos ficam só neste aparelho. Baixe (individual ou em lote) para
