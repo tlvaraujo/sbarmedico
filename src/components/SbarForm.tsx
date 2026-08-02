@@ -12,9 +12,10 @@ export interface SbarValues {
   identificacao: string
   proporcionalidade: Proporcionalidade
   s: string
-  b: string
-  a: string
+  b: string[]
+  a: string[]
   r: string[]
+  camposAusentes: string[]
 }
 
 const areaClass = `${inputClass} resize-y text-sm leading-snug`
@@ -91,14 +92,12 @@ export function SbarForm({
   const [identificacao, setIdentificacao] = useState(initial.identificacao)
   const [prop, setProp] = useState<Proporcionalidade>(initial.proporcionalidade)
   const [s, setS] = useState(initial.s)
-  const [b, setB] = useState(initial.b)
-  const [a, setA] = useState(initial.a)
+  const [bText, setBText] = useState(initial.b.join('\n'))
+  const [aText, setAText] = useState(initial.a.join('\n'))
   const [rText, setRText] = useState(initial.r.join('\n'))
+  const [camposText, setCamposText] = useState(initial.camposAusentes.join('\n'))
   const [saving, setSaving] = useState(false)
   const [regenerating, setRegenerating] = useState<Section | null>(null)
-
-  const rItems = parseBullets(rText)
-  const rOver = rItems.length > 5
 
   function values(): SbarValues {
     return {
@@ -106,9 +105,10 @@ export function SbarForm({
       identificacao: identificacao.trim(),
       proporcionalidade: prop,
       s: s.trim(),
-      b: b.trim(),
-      a: a.trim(),
-      r: rItems.slice(0, 5),
+      b: parseBullets(bText),
+      a: parseBullets(aText),
+      r: parseBullets(rText),
+      camposAusentes: parseBullets(camposText),
     }
   }
 
@@ -117,13 +117,13 @@ export function SbarForm({
     setRegenerating(section)
     try {
       const result = await onRegenerate(section, values())
-      if (section === 'r') {
-        setRText((Array.isArray(result) ? result : []).join('\n'))
+      if (section === 's') {
+        setS(typeof result === 'string' ? result : (result[0] ?? ''))
       } else {
-        const text = Array.isArray(result) ? result.join(' ') : result
-        if (section === 's') setS(text)
-        else if (section === 'b') setB(text)
-        else if (section === 'a') setA(text)
+        const joined = (Array.isArray(result) ? result : [result]).join('\n')
+        if (section === 'b') setBText(joined)
+        else if (section === 'a') setAText(joined)
+        else if (section === 'r') setRText(joined)
       }
       toast.show('Seção regerada')
     } catch (e) {
@@ -149,6 +149,14 @@ export function SbarForm({
     onRegenerate
       ? { onRegen: () => regen(section), regenBusy: regenerating === section, regenDisabled: busy }
       : {}
+  const countFooter = (t: string) => {
+    const n = parseBullets(t).length
+    return (
+      <span className="mt-1 block text-right text-xs text-slate-400 dark:text-slate-500">
+        {n} tópico{n === 1 ? '' : 's'}
+      </span>
+    )
+  }
 
   return (
     <div className="space-y-4 p-3">
@@ -170,24 +178,50 @@ export function SbarForm({
         />
       </Field>
 
-      <Area label="S — Situação" hint="Uma linha." value={s} onChange={setS} rows={2} {...regenProps('s')} />
-      <Area label="B — Breve histórico" hint="Até 5 linhas." value={b} onChange={setB} rows={5} {...regenProps('b')} />
-      <Area label="A — Avaliação" hint="Até 5 linhas." value={a} onChange={setA} rows={5} {...regenProps('a')} />
+      <Area label="S — Situação" hint="Uma linha — só o problema principal." value={s} onChange={setS} rows={2} {...regenProps('s')} />
+      <Area
+        label="B — Background"
+        hint="Um tópico por linha: terapias em curso (com o dia), comorbidade que muda conduta, dispositivos."
+        value={bText}
+        onChange={setBText}
+        rows={4}
+        {...regenProps('b')}
+        footer={countFooter(bText)}
+      />
+      <Area
+        label="A — Avaliação"
+        hint="Um tópico por linha — problema: status — o que se espera."
+        value={aText}
+        onChange={setAText}
+        rows={4}
+        {...regenProps('a')}
+        footer={countFooter(aText)}
+      />
       <Area
         label="R — Recomendação"
-        hint="Um tópico por linha (até 5)."
+        hint="Um por linha: pendências da janela (com dia) e condutas “Se X: Y”."
         value={rText}
         onChange={setRText}
         rows={5}
         {...regenProps('r')}
-        footer={
-          <span
-            className={`mt-1 block text-right text-xs ${rOver ? 'font-semibold text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-slate-500'}`}
-          >
-            {rItems.length}/5 tópicos{rOver ? ' — os excedentes serão cortados' : ''}
-          </span>
-        }
+        footer={countFooter(rText)}
       />
+
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+        <span className="mb-1.5 block text-[13px] font-semibold text-amber-800 dark:text-amber-300">
+          Não registrado no prontuário
+        </span>
+        <textarea
+          value={camposText}
+          onChange={(e) => setCamposText(e.target.value)}
+          rows={2}
+          placeholder="Itens críticos ausentes (um por linha)"
+          className={`${inputClass} resize-y text-sm`}
+        />
+        <span className="mt-1 block text-xs text-amber-700 dark:text-amber-400/80">
+          Ex.: proporcionalidade terapêutica não registrada; sem plano p/ deterioração.
+        </span>
+      </div>
 
       <Button onClick={submit} disabled={saving || busy} className="w-full">
         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}

@@ -1,17 +1,24 @@
 import type { SbarDocument } from '../types/document'
 import { PROPORCIONALIDADE_LABEL } from '../types/document'
 
+function pushBullets(lines: string[], label: string, items: string[]): void {
+  lines.push('', label)
+  if (items.length) for (const it of items) lines.push(`• ${it}`)
+  else lines.push('—')
+}
+
 /** SBAR em texto puro (para copiar/colar no prontuário eletrônico ou WhatsApp). */
 export function sbarToText(d: SbarDocument): string {
   const lines: string[] = [`SBAR — Leito ${d.leito || '—'}`]
   if (d.identificacao) lines.push(d.identificacao)
   lines.push(`Proporcionalidade: ${PROPORCIONALIDADE_LABEL[d.proporcionalidade]}`)
   lines.push('', 'S — Situação', d.s || '—')
-  lines.push('', 'B — Breve histórico', d.b || '—')
-  lines.push('', 'A — Avaliação', d.a || '—')
-  lines.push('', 'R — Recomendação')
-  if (d.r.length) for (const it of d.r) lines.push(`• ${it}`)
-  else lines.push('—')
+  pushBullets(lines, 'B — Background', d.b)
+  pushBullets(lines, 'A — Avaliação', d.a)
+  pushBullets(lines, 'R — Recomendação', d.r)
+  if (d.camposAusentes.length) {
+    pushBullets(lines, 'Não registrado no prontuário', d.camposAusentes)
+  }
   lines.push('', '— Gerado por SBAR Médico')
   return lines.join('\n')
 }

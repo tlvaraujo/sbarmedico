@@ -21,8 +21,9 @@ export interface SbarDocument {
   identificacao: string
   proporcionalidade: Proporcionalidade
   s: string // Situação — 1 linha
-  b: string // Breve histórico — ≤5 linhas
-  a: string // Avaliação — ≤5 linhas
-  r: string[] // Recomendação — ≤5 tópicos (sem o "• ")
+  b: string[] // Background — tópicos
+  a: string[] // Avaliação — tópicos
+  r: string[] // Recomendação — tópicos
+  camposAusentes: string[] // itens críticos não registrados no prontuário
   createdAt: string // ISO
 }

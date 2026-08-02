@@ -16,14 +16,15 @@ export interface GeneratePayload {
   images?: ImageInput[]
   pdfs?: { data: string }[]
   only?: Section
-  current?: { s?: string; b?: string; a?: string; r?: string[] }
+  current?: { s?: string; b?: string[]; a?: string[]; r?: string[] }
 }
 
 export interface SbarResult {
   s: string
-  b: string
-  a: string
+  b: string[]
+  a: string[]
   r: string[]
+  camposAusentes: string[]
 }
 
 async function postJson(url: string, body: unknown): Promise<unknown> {
@@ -75,13 +76,14 @@ export async function generate(payload: GeneratePayload): Promise<SbarResult> {
   const data = (await postJson('/api/generate', payload)) as Record<string, unknown>
   return {
     s: str(data.s),
-    b: str(data.b),
-    a: str(data.a),
+    b: toBullets(data.b),
+    a: toBullets(data.a),
     r: toBullets(data.r),
+    camposAusentes: toBullets(data.campos_ausentes),
   }
 }
 
-/** Regenera SOMENTE uma seção. Retorna string (s/b/a) ou string[] (r). */
+/** Regenera SOMENTE uma seção. Retorna string (s) ou string[] (b/a/r). */
 export async function generateSection(
   section: Section,
   payload: GeneratePayload,
@@ -90,7 +92,7 @@ export async function generateSection(
     string,
     unknown
   >
-  return section === 'r' ? toBullets(data.r) : str(data[section])
+  return section === 's' ? str(data.s) : toBullets(data[section])
 }
 
 // --- Helpers de arquivo/imagem ---

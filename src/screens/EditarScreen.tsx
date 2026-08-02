@@ -32,6 +32,7 @@ export function EditarScreen() {
     b: found.b,
     a: found.a,
     r: found.r,
+    camposAusentes: found.camposAusentes ?? [],
   }
 
   async function handleSubmit(v: SbarValues) {

@@ -9,32 +9,36 @@ function mk(o: Partial<SbarDocument> = {}): SbarDocument {
     identificacao: 'R.R.R — 32a — 50 dias',
     proporcionalidade: 'suporte_invasivo',
     s: 'Pneumonia',
-    b: 'Admissão 01/01 com tosse e febre.',
-    a: 'Afebril, O2 1 L/min',
+    b: ['Admissão D1 tosse+febre', 'ATB ceftriaxona D3'],
+    a: ['PAC em melhora — desmame O2'],
     r: ['Manter ATB', 'Desmame de O2'],
+    camposAusentes: [],
     createdAt: '2026-07-29T13:45:00.000Z',
     ...o,
   }
 }
 
 describe('pdfLines', () => {
-  it('tem meta (leito/identificação/proporcionalidade), seções e bullets', () => {
+  it('tem meta, S como seção e B/A/R como tópicos', () => {
     const lines = pdfLines(mk())
-    expect(lines.map((l) => l.kind)).toContain('meta')
     const leito = lines.find((l) => l.kind === 'meta' && l.label === 'Leito')
     expect(leito?.kind === 'meta' && leito.value).toBe('7B14')
     const prop = lines.find((l) => l.kind === 'meta' && l.label.startsWith('Proporcionalidade'))
     expect(prop?.kind === 'meta' && prop.value).toBe('Suporte invasivo')
     const s = lines.find((l) => l.kind === 'section' && l.label.startsWith('S'))
     expect(s?.kind === 'section' && s.body).toBe('Pneumonia')
-    const r = lines.find((l) => l.kind === 'bullets')
+    const b = lines.find((l) => l.kind === 'bullets' && l.label.startsWith('B'))
+    expect(b?.kind === 'bullets' && b.items).toEqual(['Admissão D1 tosse+febre', 'ATB ceftriaxona D3'])
+    const r = lines.find((l) => l.kind === 'bullets' && l.label.startsWith('R'))
     expect(r?.kind === 'bullets' && r.items).toEqual(['Manter ATB', 'Desmame de O2'])
   })
 
-  it('preserva "não informado no prontuário"', () => {
-    const lines = pdfLines(mk({ a: 'não informado no prontuário' }))
-    const a = lines.find((l) => l.kind === 'section' && l.label.startsWith('A'))
-    expect(a?.kind === 'section' && a.body).toBe('não informado no prontuário')
+  it('inclui o bloco de ausentes só quando há itens', () => {
+    expect(pdfLines(mk()).some((l) => l.kind === 'warn')).toBe(false)
+    const warn = pdfLines(mk({ camposAusentes: ['proporcionalidade não registrada'] })).find(
+      (l) => l.kind === 'warn',
+    )
+    expect(warn?.kind === 'warn' && warn.items).toEqual(['proporcionalidade não registrada'])
   })
 })
 

@@ -33,6 +33,7 @@ export function RevisarScreen() {
     b: state.draft.b,
     a: state.draft.a,
     r: state.draft.r,
+    camposAusentes: state.draft.camposAusentes,
   }
 
   async function handleSubmit(v: SbarValues) {

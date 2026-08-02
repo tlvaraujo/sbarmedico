@@ -8,9 +8,10 @@ const doc: SbarDocument = {
   identificacao: 'R.R.R — 32a — 15 dias',
   proporcionalidade: 'suporte_nao_invasivo',
   s: 'Paciente estável.',
-  b: 'Pneumonia há 15 dias.',
-  a: 'Melhora clínica.',
+  b: ['Pneumonia há 15 dias', 'ATB ceftriaxona D15'],
+  a: ['Melhora clínica — desmame O2'],
   r: ['Verificar RX', 'Reavaliar antibiótico'],
+  camposAusentes: [],
   createdAt: '2026-07-31T10:00:00.000Z',
 }
 
@@ -21,24 +22,28 @@ describe('sbarToText', () => {
     expect(t).toContain('R.R.R — 32a — 15 dias')
     expect(t).toContain('Proporcionalidade: Suporte não invasivo individualizado')
     expect(t).toContain('S — Situação')
-    expect(t).toContain('B — Breve histórico')
+    expect(t).toContain('B — Background')
     expect(t).toContain('A — Avaliação')
     expect(t).toContain('R — Recomendação')
   })
 
-  it('lista R em tópicos', () => {
+  it('lista B e R em tópicos', () => {
     const t = sbarToText(doc)
+    expect(t).toContain('• Pneumonia há 15 dias')
     expect(t).toContain('• Verificar RX')
     expect(t).toContain('• Reavaliar antibiótico')
   })
 
-  it('usa — quando uma seção está vazia', () => {
-    const t = sbarToText({ ...doc, a: '', r: [] })
-    // A seção A vazia e R sem itens viram "—"
-    const linhas = t.split('\n')
+  it('usa — quando uma seção-lista está vazia', () => {
+    const linhas = sbarToText({ ...doc, a: [] }).split('\n')
     const idxA = linhas.indexOf('A — Avaliação')
     expect(linhas[idxA + 1]).toBe('—')
-    const idxR = linhas.indexOf('R — Recomendação')
-    expect(linhas[idxR + 1]).toBe('—')
+  })
+
+  it('inclui o bloco de ausentes só quando há itens', () => {
+    expect(sbarToText(doc)).not.toContain('Não registrado no prontuário')
+    const t = sbarToText({ ...doc, camposAusentes: ['proporcionalidade não registrada'] })
+    expect(t).toContain('Não registrado no prontuário')
+    expect(t).toContain('• proporcionalidade não registrada')
   })
 })

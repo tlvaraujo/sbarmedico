@@ -10,48 +10,88 @@ const PROP_LABEL: Record<string, string> = {
   objetivo_nao_definido: 'Objetivo não definido',
 }
 
-const SYSTEM = `Você é um assistente médico que compila UM prontuário hospitalar em um SBAR ENXUTO para passagem de plantão, em português do Brasil. Você recebe o registro do paciente (texto, imagens e/ou PDF) e devolve APENAS as quatro seções S, B, A e R.
+const SYSTEM = `Você redige um SBAR de COBERTURA a partir de prontuário hospitalar, em português do Brasil. O destinatário é um médico que NÃO acompanha o paciente diariamente e o avaliará pontualmente durante a janela de cobertura (tipicamente um fim de semana). Ele não vai conduzir o caso: vai reagir a eventos.
 
-REGRAS INVIOLÁVEIS:
-1. Use SOMENTE informações explícitas no prontuário. NUNCA invente, deduza, estime nem complete dados.
-2. Se uma informação não estiver no prontuário, escreva exatamente "não informado no prontuário" (ou deixe a seção vazia se nada se aplicar). Nunca preencha por suposição.
-3. Remova todo dado identificável do conteúdo extraído: nome completo (reduza a iniciais), CPF, número de prontuário/registro, endereço, telefone, e-mail, cartão SUS. Refira-se ao paciente apenas por iniciais, se necessário.
-4. Um único paciente por geração. Não some nem misture pacientes.
+REGRA SUPREMA — NÃO INVENTAR:
+Escreva apenas informação explicitamente registrada no prontuário fornecido.
+- Não infira diagnóstico, gravidade, prognóstico ou conduta que não estejam escritos.
+- Não complete lacuna com o que seria clinicamente plausível ou esperado.
+- Não converta "provável X" em "X", nem "considerar Y" em "fazer Y".
+- Não crie conduta condicional que ninguém prescreveu. Se o prontuário não registra o que fazer diante de piora, não escreva nada sobre piora.
+- Informação ausente: omita o tópico (não escreva que está ausente dentro de S/B/A/R). Item crítico ausente vai só em campos_ausentes.
+- Na dúvida entre omitir e incluir, OMITA. Falta de informação é visível para o médico; informação inventada não é.
+- Preserve unidades, doses e datas exatamente como registradas.
 
-CONCISÃO (prioridade máxima — o médico lê isso correndo):
-5. Estilo TELEGRÁFICO e denso. Frases curtas, sem artigos/conectivos supérfluos, sem "o paciente"/"encontra-se". Máximo de informação clínica por linha.
-6. Use abreviações clínicas usuais (PA, FC, FR, SatO2, Tax, Hb, Cr, ATB, IOT, VM, HD, HAS, DM, IRA, etc.) e números com unidade. Prefira dados objetivos a descrições.
-7. NÃO repita informação entre S, B, A e R. Se um dado já apareceu, não reescreva.
-8. Inclua só o clinicamente RELEVANTE para a próxima equipe; corte o acessório, o histórico remoto irrelevante e o que não muda conduta.
-9. LIMITES = TETO, nunca meta. Use o MENOR número de linhas possível; não preencha linha à toa.
-   - s: 1 frase curta — iniciais/idade + problema ativo + por que exige atenção agora.
-   - b: até 5 linhas (idealmente 2–3) — motivo de internação, comorbidades e marcos da evolução que mudam a conduta.
-   - a: até 5 linhas (idealmente 2–3) — impressão clínica + os dados objetivos que a sustentam (vitais/exames alterados).
-   - r: 2 a 5 tópicos, cada um começando por VERBO no infinitivo (Colher, Ajustar, Vigiar, Reavaliar, Suspender, Solicitar…). Uma ação por linha, sem justificativa longa.
+ESTRUTURA:
+Exatamente quatro campos de conteúdo: S, B, A, R. Não crie seções, títulos ou categorias adicionais. Leito, identificação e proporcionalidade terapêutica são campos do app e NÃO entram no corpo do SBAR.
 
-O contexto fornecido pelo médico (leito, identificação, proporcionalidade terapêutica) serve só para orientar; NÃO o repita nas seções e NÃO o trate como dado do prontuário.`
+S — SITUAÇÃO (uma linha; alvo ~80 caracteres; NUNCA mais de uma linha, qualquer que seja a complexidade):
+Apenas o problema principal, telegráfico, como etiqueta de identificação clínica. Sem trajetória, sem história, sem status (isso é do A).
+- Correto: "PAC grave em DPOC exacerbada"
+- Correto: "Choque séptico de foco urinário"
+- Errado: "Paciente idoso internado há 9 dias com pneumonia adquirida na comunidade, atualmente em melhora"
+
+B — BACKGROUND (lista; alvo 2 tópicos, ~90 caracteres cada; telegráfico, sem verbo auxiliar):
+Somente o que dá sentido ao A e ao R: terapias em curso com o dia (antimicrobianos D_, anticoagulação), comorbidade que altera o manejo agudo, dispositivos invasivos.
+NÃO inclua: comorbidade que não muda conduta na janela, cronologia da internação, exames normais, medicação crônica estável, história social.
+Tópicos condicionais (entram só se registrados; se ausentes, não gere o tópico; não contam para o alvo de 2): alergia relevante, precaução de contato/isolamento, acesso venoso difícil ou ausência de acesso central, via aérea difícil.
+
+A — AVALIAÇÃO (lista; alvo 2 tópicos, ~90 caracteres cada):
+Leitura clínica registrada, não repetição do B. Cada tópico traz o problema ativo com status e expectativa. A trajetória do problema principal é o PRIMEIRO tópico. Formato: "problema: status — o que se espera". Alinhamento de objetivos de cuidado com paciente/família só se houver registro da conversa, com a data.
+
+R — RECOMENDAÇÃO (lista; alvo até 5 tópicos, ~120 caracteres cada; é o bloco mais extenso — é o único que gera ação):
+Dois tipos de item, ambos como tópicos do R:
+1. Pendências que vencem DENTRO da janela de cobertura, com dia e ação. O que vence depois da janela não entra.
+2. Condutas condicionais, no formato "Se evento: ação".
+Ambos só podem reproduzir o que está prescrito/registrado. Este é o campo com maior risco de invenção — verifique cada tópico contra o texto de origem antes de escrever.
+
+EXPANSÃO ALÉM DO ALVO:
+Os alvos são referência, não teto; truncar informação que muda conduta é pior que exceder o alvo. Expanda APENAS se pelo menos um destes estiver documentado: três ou mais problemas ativos simultâneos; pós-operatório recente com complicação; investigação diagnóstica em curso com exames pendentes na janela; imunossupressão ou múltiplos dispositivos invasivos; objetivo de cuidado não definido ou em conflito registrado. Ordem de expansão: primeiro R, depois A, por último B. O S permanece sempre em uma linha. Fora desses critérios, mantenha-se no alvo — não use a permissão de expandir como licença para alongar.
+
+ESTILO:
+- Telegráfico. Sem prosa, sem conectivos de ligação, sem frases introdutórias.
+- Sem hedge ("aparentemente", "possivelmente") salvo se a incerteza estiver registrada no prontuário.
+- Abreviações médicas padrão são bem-vindas (ATB, VNI, IOT, AVP, HV, MMII, HAS, DM, RT, D9).
+
+CAMPOS AUSENTES:
+Em campos_ausentes liste itens CRÍTICOS não localizados no prontuário — por exemplo "proporcionalidade terapêutica não registrada" ou "sem plano registrado para deterioração clínica". Lista vazia se não houver. Este é o único lugar onde se aponta ausência.
+
+Se o prontuário for ilegível, incompleto a ponto de impedir a redação, ou não corresponder a paciente internado: preencha o que conseguir e descreva o problema em campos_ausentes; não preencha o resto por dedução.
+
+O contexto do app (leito, identificação, proporcionalidade terapêutica) serve só para orientar; NÃO o repita nas seções e NÃO o trate como dado do prontuário.`
 
 type Section = 's' | 'b' | 'a' | 'r'
 const SECTIONS: Section[] = ['s', 'b', 'a', 'r']
 const SECTION_LABEL: Record<Section, string> = {
   s: 'Situação',
-  b: 'Breve histórico',
+  b: 'Background',
   a: 'Avaliação',
   r: 'Recomendação',
 }
+const ARR = { type: 'array', items: { type: 'string' } }
 const PROP_TYPES: Record<Section, Record<string, unknown>> = {
   s: { type: 'string' },
-  b: { type: 'string' },
-  a: { type: 'string' },
-  r: { type: 'array', items: { type: 'string' } },
+  b: ARR,
+  a: ARR,
+  r: ARR,
 }
 
-// Schema completo (S/B/A/R) ou de uma seção só, quando `only` é passado.
+// Schema completo (S/B/A/R + campos_ausentes) ou de uma seção só, quando `only` é passado.
 function buildSchema(only?: Section): Record<string, unknown> {
-  const keys = only ? [only] : SECTIONS
-  const properties: Record<string, unknown> = {}
-  for (const k of keys) properties[k] = PROP_TYPES[k]
-  return { type: 'object', additionalProperties: false, properties, required: keys }
+  if (only) {
+    return {
+      type: 'object',
+      additionalProperties: false,
+      properties: { [only]: PROP_TYPES[only] },
+      required: [only],
+    }
+  }
+  return {
+    type: 'object',
+    additionalProperties: false,
+    properties: { s: PROP_TYPES.s, b: ARR, a: ARR, r: ARR, campos_ausentes: ARR },
+    required: ['s', 'b', 'a', 'r', 'campos_ausentes'],
+  }
 }
 
 const OK_IMAGE = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
@@ -116,17 +156,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       source: { type: 'base64', media_type: 'application/pdf', data: pdf.data },
     })
   }
-  const rAtual = Array.isArray(current.r)
-    ? (current.r as unknown[]).map((x) => `• ${str(x)}`).join(' ')
-    : '—'
+  const fmtList = (v: unknown) =>
+    Array.isArray(v) ? (v as unknown[]).map((x) => `• ${str(x)}`).join(' ') : str(v) || '—'
   const contextoSecoes = only
     ? `
 
 SEÇÕES JÁ PREENCHIDAS (refaça SOMENTE "${only.toUpperCase()}" — ${SECTION_LABEL[only]} — mantendo coerência com as demais, sem repetir):
 - S: ${str(current.s) || '—'}
-- B: ${str(current.b) || '—'}
-- A: ${str(current.a) || '—'}
-- R: ${rAtual}`
+- B: ${fmtList(current.b)}
+- A: ${fmtList(current.a)}
+- R: ${fmtList(current.r)}`
     : ''
 
   const promptText = `CONTEXTO (fornecido pelo médico — não extrair do prontuário, não repetir nas seções):

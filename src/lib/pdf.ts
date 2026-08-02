@@ -9,10 +9,11 @@ export type PdfLine =
   | { kind: 'meta'; label: string; value: string }
   | { kind: 'section'; label: string; body: string }
   | { kind: 'bullets'; label: string; items: string[] }
+  | { kind: 'warn'; label: string; items: string[] }
 
 /** Estrutura pura e testável do corpo do documento (sem jsPDF). */
 export function pdfLines(d: SbarDocument): PdfLine[] {
-  return [
+  const lines: PdfLine[] = [
     { kind: 'meta', label: 'Leito', value: d.leito || '—' },
     { kind: 'meta', label: 'Identificação', value: d.identificacao || '—' },
     {
@@ -21,10 +22,14 @@ export function pdfLines(d: SbarDocument): PdfLine[] {
       value: PROPORCIONALIDADE_LABEL[d.proporcionalidade],
     },
     { kind: 'section', label: 'S — Situação', body: d.s },
-    { kind: 'section', label: 'B — Breve histórico', body: d.b },
-    { kind: 'section', label: 'A — Avaliação', body: d.a },
+    { kind: 'bullets', label: 'B — Background', items: d.b },
+    { kind: 'bullets', label: 'A — Avaliação', items: d.a },
     { kind: 'bullets', label: 'R — Recomendação', items: d.r },
   ]
+  if (d.camposAusentes.length) {
+    lines.push({ kind: 'warn', label: 'Não registrado no prontuário', items: d.camposAusentes })
+  }
+  return lines
 }
 
 export function pdfFilename(d: SbarDocument): string {
@@ -93,15 +98,19 @@ function drawDocument(pdf: JsPdfDoc, d: SbarDocument): void {
       pdf.text(bl, M, y)
       y += 5 * bl.length + 3
     } else {
+      // bullets (B/A/R) ou warn (campos ausentes) — warn em âmbar
+      const warn = ln.kind === 'warn'
       ensure(12)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(11)
-      pdf.setTextColor(15, 129, 104)
+      if (warn) pdf.setTextColor(180, 83, 9)
+      else pdf.setTextColor(15, 129, 104)
       pdf.text(ln.label, M, y)
       y += 5
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(10.5)
-      pdf.setTextColor(30, 30, 30)
+      if (warn) pdf.setTextColor(146, 64, 14)
+      else pdf.setTextColor(30, 30, 30)
       const items = ln.items.length ? ln.items : ['—']
       for (const it of items) {
         const bl = pdf.splitTextToSize(it, contentW - 5) as string[]
