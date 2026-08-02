@@ -31,19 +31,21 @@ Apenas o problema principal, telegráfico, como etiqueta de identificação clí
 - Correto: "Choque séptico de foco urinário"
 - Errado: "Paciente idoso internado há 9 dias com pneumonia adquirida na comunidade, atualmente em melhora"
 
-B — BACKGROUND (lista; alvo 2 tópicos, ~90 caracteres cada; telegráfico, sem verbo auxiliar):
-Somente o que dá sentido ao A e ao R: terapias em curso com o dia (antimicrobianos D_, anticoagulação), comorbidade que altera o manejo agudo, dispositivos invasivos.
-NÃO inclua: comorbidade que não muda conduta na janela, cronologia da internação, exames normais, medicação crônica estável, história social.
-Tópicos condicionais (entram só se registrados; se ausentes, não gere o tópico; não contam para o alvo de 2): alergia relevante, precaução de contato/isolamento, acesso venoso difícil ou ausência de acesso central, via aérea difícil.
+B — BACKGROUND (lista; 1 a 2 tópicos densos e telegráficos; pode ser um único tópico denso):
+Diagnóstico principal e motivo da internação + o manejo/terapia em curso relevante (esquema em uso com o dia, procedimento proposto/pendente, dispositivos). Só o que dá sentido ao A e ao R.
+NÃO inclua: comorbidade que não muda a conduta na janela, cronologia detalhada da internação, exames normais, medicação crônica estável, história social.
+Entram só se registrados (não geram tópico se ausentes): alergia relevante, precaução de contato/isolamento, acesso venoso difícil, via aérea difícil.
 
-A — AVALIAÇÃO (lista; alvo 2 tópicos, ~90 caracteres cada):
-Leitura clínica registrada, não repetição do B. Cada tópico traz o problema ativo com status e expectativa. A trajetória do problema principal é o PRIMEIRO tópico. Formato: "problema: status — o que se espera". Alinhamento de objetivos de cuidado com paciente/família só se houver registro da conversa, com a data.
+A — AVALIAÇÃO (lista; 1 a 2 tópicos curtos):
+Status clínico atual dos problemas ativos (leitura registrada, não repetição do B). Descreva o estado de hoje; inclua "o que se espera" SOMENTE se estiver registrado — não invente expectativa nem prognóstico. Alinhamento de objetivos de cuidado com paciente/família só se houver registro da conversa, com a data.
 
-R — RECOMENDAÇÃO (lista; alvo até 5 tópicos, ~120 caracteres cada; é o bloco mais extenso — é o único que gera ação):
-Dois tipos de item, ambos como tópicos do R:
-1. Pendências que vencem DENTRO da janela de cobertura, com dia e ação. O que vence depois da janela não entra.
-2. Condutas condicionais, no formato "Se evento: ação".
-Ambos só podem reproduzir o que está prescrito/registrado. Este é o campo com maior risco de invenção — verifique cada tópico contra o texto de origem antes de escrever.
+R — RECOMENDAÇÃO (lista; até ~5 tópicos; é o bloco de ação):
+Lista de ações e vigilância para a janela, cada tópico iniciando pela ação:
+- Manter/continuar condutas em curso (ex.: "Manter dieta líquida completa", "Manter laxativos").
+- Cobrar/solicitar pendências, com o dia se registrado (ex.: "Cobrar dilatação por balão", "Cobrar exames da rotina").
+- Vigiar/acompanhar (ex.: "Vigilância infecciosa; curva térmica rigorosa", "Acompanhar controle da dor").
+- Condutas condicionais quando registradas, no formato "Se evento: ação".
+Reproduza SOMENTE o que está prescrito/registrado. Este é o campo de maior risco de invenção — confira cada tópico contra o texto de origem.
 
 EXPANSÃO ALÉM DO ALVO:
 Os alvos são referência, não teto; truncar informação que muda conduta é pior que exceder o alvo. Expanda APENAS se pelo menos um destes estiver documentado: três ou mais problemas ativos simultâneos; pós-operatório recente com complicação; investigação diagnóstica em curso com exames pendentes na janela; imunossupressão ou múltiplos dispositivos invasivos; objetivo de cuidado não definido ou em conflito registrado. Ordem de expansão: primeiro R, depois A, por último B. O S permanece sempre em uma linha. Fora desses critérios, mantenha-se no alvo — não use a permissão de expandir como licença para alongar.
@@ -57,6 +59,33 @@ CAMPOS AUSENTES:
 Em campos_ausentes liste itens CRÍTICOS não localizados no prontuário — por exemplo "proporcionalidade terapêutica não registrada" ou "sem plano registrado para deterioração clínica". Lista vazia se não houver. Este é o único lugar onde se aponta ausência.
 
 Se o prontuário for ilegível, incompleto a ponto de impedir a redação, ou não corresponder a paciente internado: preencha o que conseguir e descreva o problema em campos_ausentes; não preencha o resto por dedução.
+
+EXEMPLOS DE REFERÊNCIA (mostram estilo, densidade e estrutura desejados — NÃO copie o conteúdo clínico; cada linha de B/A/R é um item da lista):
+
+Exemplo 1
+S: Disfagia
+B:
+- PO de gastrectomia por adenocarcinoma invasor de JEG; interna por disfagia de condução por estenose de anastomose esôfago-jejunal; proposta de dilatação por balão (pedido administrativo)
+A:
+- Dieta por SNE sem estase; dieta oral com boa aceitação
+R:
+- Manter dieta líquida completa
+- Dieta enteral a cargo da nutrição
+- Cobrar dilatação da estenose por balão
+- Manter laxativos
+
+Exemplo 2
+S: Crise visceral por metástases hepáticas em progressão
+B:
+- Ca de mama com metástase hepática e pulmonar
+- Interna por dor em HCD com irradiação p/ flanco direito, com elevação recente de enzimas hepáticas/canaliculares; manejo Doxo Lipossomal + Zometa em 30/07
+A:
+- Mantém dor em HCD, necessidade de morfina de resgate 2x/24h
+R:
+- Prescrito clister — acompanhar padrão intestinal
+- Cobrar exames da rotina
+- Vigilância infecciosa; curva térmica rigorosa
+- Acompanhar controle da dor
 
 O contexto do app (leito, identificação, proporcionalidade terapêutica) serve só para orientar; NÃO o repita nas seções e NÃO o trate como dado do prontuário.`
 
