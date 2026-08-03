@@ -25,6 +25,8 @@ Escreva apenas informação explicitamente registrada no prontuário fornecido.
 ESTRUTURA:
 Exatamente quatro campos de conteúdo: S, B, A, R. Não crie seções, títulos ou categorias adicionais. Leito, identificação e proporcionalidade terapêutica são campos do app e NÃO entram no corpo do SBAR.
 
+REGRA DE ROTINA: profilaxia de TEV de rotina (enoxaparina profilática, ainda que descrita como "alto risco" ou "Pádua > 4") NÃO entra em NENHUMA seção — nem no B, nem no R. Só apareça se for questão ATIVA da conduta: ex.: profilaxia suspensa/contraindicada por sangramento, ou anticoagulação em dose terapêutica.
+
 S — SITUAÇÃO (uma linha; alvo ~80 caracteres; NUNCA mais de uma linha, qualquer que seja a complexidade):
 O problema ATIVO principal que motiva a atenção/manejo agora — tipicamente a SITUAÇÃO 1 do prontuário —, NÃO a doença de base (esta vai no B). Telegráfico, como etiqueta clínica. Sem trajetória, sem história, sem status (isso é do A).
 - Se o paciente tem câncer de base mas está sob manejo por uma infecção de ferida operatória, o S é "Infecção de FO de laminectomia" e o câncer vai no B.
