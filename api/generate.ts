@@ -38,8 +38,10 @@ NÃO coloque STATUS clínico atual no B (déficits, força/nível sensitivo, sin
 NÃO inclua: comorbidade que não muda a conduta na janela, cronologia detalhada da internação, exames normais, medicação crônica estável, história social.
 Entram só se registrados (não geram tópico se ausentes): alergia relevante, precaução de contato/isolamento, acesso venoso difícil, via aérea difícil.
 
-A — AVALIAÇÃO (lista; tópicos curtos):
-Status clínico atual dos problemas ativos (leitura registrada, não repetição do B), incluindo o status neurológico/funcional quando relevante (força/nível sensitivo, nível de consciência) e a resposta ao tratamento (ex.: infecção — PCR/afebril). Descreva o estado de hoje; inclua "o que se espera" SOMENTE se estiver registrado — não invente expectativa nem prognóstico. NÃO inclua negativas pró-forma/triviais ("sem queixas espontâneas", "sem intercorrências"). Alinhamento de objetivos de cuidado com paciente/família só se houver registro da conversa, com a data.
+A — AVALIAÇÃO (lista; tópicos curtos — só o clinicamente relevante):
+Para cada problema ativo, o status que muda ou orienta a conduta: resposta ao tratamento (ex.: infecção — PCR/afebril/vancocinemia), déficit neurológico/funcional (força/nível sensitivo, nível de consciência), controle da dor. Não repita o B.
+CORTE a rotina que não muda conduta — aceitação de dieta, diurese, evacuação, sinais vitais normais, edema trivial — inclua só se ALTERADA ou relevante para a janela.
+Inclua "o que se espera" SOMENTE se estiver registrado — não invente expectativa nem prognóstico. NÃO inclua negativas pró-forma ("sem queixas", "sem intercorrências"). Alinhamento de objetivos de cuidado só se houver registro da conversa, com a data.
 
 R — RECOMENDAÇÃO (lista; até ~5 tópicos; é o bloco de ação):
 Lista de ações e vigilância para a janela, cada tópico iniciando pela ação:
