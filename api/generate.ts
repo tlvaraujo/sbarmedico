@@ -31,14 +31,15 @@ O problema ATIVO principal que motiva a atenção/manejo agora — tipicamente a
 - Correto: "PAC grave em DPOC exacerbada" · "Choque séptico de foco urinário"
 - Errado: "Paciente idoso internado há 9 dias com pneumonia adquirida na comunidade, atualmente em melhora"
 
-B — BACKGROUND (lista; tópicos densos e telegráficos):
-Doença de base e motivo da internação + o manejo/terapia em curso relevante (esquema em uso com o dia, procedimento proposto/pendente, dispositivos). Só o que dá sentido ao A e ao R.
-Liste também, de forma SUCINTA, os problemas secundários relevantes — um tópico curto cada (ex.: "Síndrome de Cushing iatrogênica por dexametasona crônica"; "Colonização por MRSA").
+B — BACKGROUND (lista; tópicos densos e telegráficos; rótulos curtos):
+Doença de base e motivo da internação + o manejo/terapia em curso relevante (procedimentos, ATB com o dia, dispositivos). Cite os problemas secundários relevantes como RÓTULOS CURTOS, um por tópico (ex.: "Síndrome de Cushing iatrogênica", "Colonização por MRSA", "Dor oncológica em manejo pela Clínica da Dor").
+NÃO repita no B esquemas de dose que já vão no R — o esquema completo (ex.: analgesia) fica só no R; no B fica o rótulo ("dor oncológica em manejo").
+NÃO coloque STATUS clínico atual no B (déficits, força/nível sensitivo, sinais vitais, exames de hoje) — isso é A.
 NÃO inclua: comorbidade que não muda a conduta na janela, cronologia detalhada da internação, exames normais, medicação crônica estável, história social.
 Entram só se registrados (não geram tópico se ausentes): alergia relevante, precaução de contato/isolamento, acesso venoso difícil, via aérea difícil.
 
-A — AVALIAÇÃO (lista; 1 a 2 tópicos curtos):
-Status clínico atual dos problemas ativos (leitura registrada, não repetição do B). Descreva o estado de hoje; inclua "o que se espera" SOMENTE se estiver registrado — não invente expectativa nem prognóstico. NÃO inclua negativas pró-forma/triviais ("sem queixas espontâneas", "sem intercorrências") — traga só achados e estado clinicamente úteis. Alinhamento de objetivos de cuidado com paciente/família só se houver registro da conversa, com a data.
+A — AVALIAÇÃO (lista; tópicos curtos):
+Status clínico atual dos problemas ativos (leitura registrada, não repetição do B), incluindo o status neurológico/funcional quando relevante (força/nível sensitivo, nível de consciência) e a resposta ao tratamento (ex.: infecção — PCR/afebril). Descreva o estado de hoje; inclua "o que se espera" SOMENTE se estiver registrado — não invente expectativa nem prognóstico. NÃO inclua negativas pró-forma/triviais ("sem queixas espontâneas", "sem intercorrências"). Alinhamento de objetivos de cuidado com paciente/família só se houver registro da conversa, com a data.
 
 R — RECOMENDAÇÃO (lista; até ~5 tópicos; é o bloco de ação):
 Lista de ações e vigilância para a janela, cada tópico iniciando pela ação:
