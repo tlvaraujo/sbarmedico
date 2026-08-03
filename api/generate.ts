@@ -35,7 +35,7 @@ B — BACKGROUND (lista; tópicos densos e telegráficos; rótulos curtos):
 Doença de base e motivo da internação + o manejo/terapia em curso relevante (procedimentos, ATB com o dia, dispositivos). Cite os problemas secundários relevantes como RÓTULOS CURTOS, um por tópico (ex.: "Síndrome de Cushing iatrogênica", "Colonização por MRSA", "Dor oncológica em manejo pela Clínica da Dor").
 NÃO repita no B esquemas de dose que já vão no R — o esquema completo (ex.: analgesia) fica só no R; no B fica o rótulo ("dor oncológica em manejo").
 NÃO coloque STATUS clínico atual no B (déficits, força/nível sensitivo, sinais vitais, exames de hoje) — isso é A.
-NÃO inclua: comorbidade que não muda a conduta na janela, cronologia detalhada da internação, exames normais, medicação crônica estável, história social.
+NÃO inclua: comorbidade que não muda a conduta na janela, cronologia detalhada da internação, exames normais, medicação crônica estável, história social, profilaxia de TEV de rotina (é padrão — só cite se for clinicamente importante para a conduta: ex.: suspensa/contraindicada por sangramento, ou anticoagulação em dose terapêutica).
 Entram só se registrados (não geram tópico se ausentes): alergia relevante, precaução de contato/isolamento, acesso venoso difícil, via aérea difícil.
 
 A — AVALIAÇÃO (lista; tópicos curtos — só o clinicamente relevante):
@@ -49,6 +49,7 @@ Lista de ações e vigilância para a janela, cada tópico iniciando pela ação
 - Cobrar/solicitar pendências, com o dia se registrado (ex.: "Cobrar dilatação por balão", "Cobrar exames da rotina").
 - Vigiar/acompanhar (ex.: "Vigilância infecciosa; curva térmica rigorosa", "Acompanhar controle da dor").
 - Condutas condicionais quando registradas, no formato "Se evento: ação".
+NÃO liste profilaxia de TEV de rotina (só se importante para a conduta — ex.: suspensa/contraindicada por sangramento).
 Reproduza SOMENTE o que está prescrito/registrado. Este é o campo de maior risco de invenção — confira cada tópico contra o texto de origem.
 
 EXPANSÃO ALÉM DO ALVO:
